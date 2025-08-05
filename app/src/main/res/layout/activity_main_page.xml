@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_page"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:paddingBottom="12dp">
+
+    <!-- 상단 "팬텀으로 보호해요" -->
+    <FrameLayout
+        android:id="@+id/topBar"
+        android:layout_width="0dp"
+        android:layout_height="34dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="16dp">
+
+            <TextView
+                android:id="@+id/maintoptext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="팬텀"
+                android:textSize="16sp"
+                android:textColor="#660099"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/neighborText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="으로 보호해요"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#000000" />
+        </LinearLayout>
+    </FrameLayout>
+    <ScrollView
+        android:id="@+id/scrollContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/topBar"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="80dp">
+
+    <!-- 실시간 보호 카드 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/protectionCard"
+        android:layout_width="392dp"
+        android:layout_height="178dp"
+        android:background="@drawable/shadow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="MissingConstraints">
+
+        <!-- 유령 이미지 -->
+        <ImageView
+            android:id="@+id/ghostImage"
+            android:layout_width="187dp"
+            android:layout_height="187dp"
+            android:src="@drawable/ic_protect"
+            android:contentDescription="유령과 방패"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 텍스트 1 -->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:layout_marginLeft="20dp"
+            android:text="24시간 스마트폰 안전 지킴이!"
+            android:textColor="#000000"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- 텍스트 2 -->
+        <TextView
+            android:id="@+id/actionText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="실시간 보호 시작하기 >"
+            android:textColor="#660099"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@id/title"
+            app:layout_constraintTop_toBottomOf="@id/title" />
+
+        <!-- 하단 설명 텍스트 -->
+        <TextView
+            android:id="@+id/features"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="25dp"
+            android:text="스팸/피싱 탐지 | DDoS 탐지 및 차단 | 악성코드 탐지"
+            android:textColor="#000000"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/actionText" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <!-- 메뉴 바 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/shortcutCard"
+        android:layout_width="392dp"
+        android:layout_height="178dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintTop_toBottomOf="@id/protectionCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp">
+
+        <!-- 간편정리 -->
+        <LinearLayout
+            android:id="@+id/shortcut_easy"
+            android:layout_width="70dp"
+            android:layout_height="98dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/shortcut_delete"
+            android:layout_margin="12dp">
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@drawable/circle_bg"
+                android:padding="6dp"
+                android:src="@drawable/ic_easy" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="간편정리"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#660099"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 용량정리 -->
+        <LinearLayout
+            android:id="@+id/shortcut_delete"
+            android:layout_width="70dp"
+            android:layout_height="98dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/shortcut_easy"
+            app:layout_constraintEnd_toStartOf="@id/shortcut_spam">
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@drawable/circle_bg"
+                android:src="@drawable/ic_delete"
+                android:padding="6dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="용량정리"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#660099"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- 스팸탐지 -->
+        <LinearLayout
+            android:id="@+id/shortcut_spam"
+            android:layout_width="70dp"
+            android:layout_height="98dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/shortcut_delete"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_margin="12dp">
+
+            <ImageView
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:background="@drawable/circle_bg"
+                android:src="@drawable/ic_spam" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="팬텀 봇"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#660099"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <!--광고 배너-->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rewardCard"
+        android:layout_width="392dp"
+        android:layout_height="356dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/shadow"
+        app:layout_constraintTop_toBottomOf="@id/shortcutCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- 배경처럼 깔리는 유령 이미지 -->
+        <ImageView
+            android:id="@+id/rewardImage"
+            android:layout_width="333dp"
+            android:layout_height="333dp"
+            android:src="@drawable/ic_reward_ghost"
+            android:contentDescription="보안 유령"
+            android:scaleType="fitXY"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:translationZ="-1dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="-60dp"/>
+
+        <!-- 리워드 라벨 -->
+        <TextView
+            android:id="@+id/rewardLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="리워드"
+            android:textSize="14sp"
+            android:textColor="#660099"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="20dp"/>
+
+        <!-- 메인 문장 -->
+        <TextView
+            android:id="@+id/rewardText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="클릭 한 번으로 걱정 끝!\n실시간 보안점검으로 \n안심"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:lineSpacingExtra="4dp"
+            app:layout_constraintTop_toBottomOf="@id/rewardLabel"
+            app:layout_constraintStart_toStartOf="@id/rewardLabel"
+            android:layout_marginTop="25dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout> <!-- ScrollView 내부 ConstraintLayout 닫힘 -->
+    </ScrollView> <!-- ScrollView 닫힘 -->
+
+        <LinearLayout
+            android:id="@+id/bottomNav"
+            android:layout_width="412dp"
+            android:layout_height="68dp"
+            android:background="#FFFFFF"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            android:elevation="8dp"
+            android:padding="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- 홈 -->
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="홈"
+                    android:textColor="#660099"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- 보안 -->
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                     />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="보안"
+                    android:textColor="#000000"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- 마이페이지 -->
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                     />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="마이페이지"
+                    android:textColor="#000000"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
