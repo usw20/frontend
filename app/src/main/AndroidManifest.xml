@@ -9,17 +9,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Phantom">
 
-        <!-- 시작 액티비티 -->
+        <!-- 앱 시작 화면: MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
-        <!-- 이동할 두 번째 액티비티 -->
+        <!-- 이후 화면들: 인텐트 필터 없이 선언만 -->
         <activity android:name=".MainPageActivity" />
+        <activity android:name=".SecurityActivity" />
+        <activity android:name=".MypageActivity" />
+        <activity
+            android:name=".StorageCleanActivity"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
+            android:exported="false" />
+        <activity android:name=".EasyCleanActivity" />
     </application>
 </manifest>
