@@ -4,11 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.view.animation.TranslateAnimation
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.cookandroid.phantom.BotActivity
 import com.cookandroid.phantom.StorageCleanActivity
 import com.cookandroid.phantom.EasyCleanActivity
 
@@ -92,6 +94,14 @@ class MainPageActivity : AppCompatActivity() {
             startActivity(android.content.Intent(this, StorageCleanActivity::class.java))
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
+        findViewById<View>(R.id.shortcut_spam).setOnClickListener {
+            startActivity(Intent(this, BotActivity::class.java))
+        }
+        findViewById<TextView>(R.id.actionText).setOnClickListener {
+            startActivity(Intent(this, ProtectionStartActivity::class.java))
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+
 
     }
 

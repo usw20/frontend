@@ -54,7 +54,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:hint="이메일"
-                android:drawableStart="@drawable/ic_protect"
                 android:drawablePadding="12dp"
                 android:paddingHorizontal="16dp"
                 android:background="@drawable/rounded_input_background"
@@ -63,13 +62,26 @@
                 android:textSize="16sp"
                 android:layout_marginBottom="16dp" />
 
+
+
+            <EditText
+                android:id="@+id/signupPhone"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:hint="전화번호(숫자만)"
+                android:inputType="phone"
+                android:paddingHorizontal="16dp"
+                android:background="@drawable/rounded_input_background"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:layout_marginBottom="16dp"/>
+
             <!-- 비밀번호 입력 -->
             <EditText
                 android:id="@+id/signupPassword"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:hint="비밀번호"
-                android:drawableStart="@drawable/ic_protect"
                 android:drawablePadding="12dp"
                 android:paddingHorizontal="16dp"
                 android:background="@drawable/rounded_input_background"
@@ -84,7 +96,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:hint="비밀번호 확인"
-                android:drawableStart="@drawable/ic_protect"
                 android:drawablePadding="12dp"
                 android:paddingHorizontal="16dp"
                 android:background="@drawable/rounded_input_background"
