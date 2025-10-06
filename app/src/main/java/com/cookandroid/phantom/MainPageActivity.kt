@@ -10,9 +10,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.cookandroid.phantom.BotActivity
-import com.cookandroid.phantom.StorageCleanActivity
-import com.cookandroid.phantom.EasyCleanActivity
+import androidx.lifecycle.lifecycleScope
+import com.cookandroid.phantom.data.local.TokenDataStore
+import kotlinx.coroutines.launch
 
 class MainPageActivity : AppCompatActivity() {
 
@@ -36,10 +36,16 @@ class MainPageActivity : AppCompatActivity() {
     private var ghostAnim: TranslateAnimation? = null
     private lateinit var ghost: ImageView
 
+    // 토큰 저장소
+    private lateinit var tokenStore: TokenDataStore
+
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_page)
+
+        // TokenDataStore 초기화
+        tokenStore = TokenDataStore(this)
 
         // findViews
         tabSecurity = findViewById(R.id.tab_security)
@@ -62,18 +68,15 @@ class MainPageActivity : AppCompatActivity() {
         tabSecurity.setOnClickListener {
             if (currentTab() != Tab.SECURITY) {
                 startActivity(Intent(this, SecurityActivity::class.java))
-                // ✅ 보안 페이지로 이동할 때도 fade로 통일
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             }
         }
         tabHome.setOnClickListener {
             // 이미 홈: 필요하면 스크롤 맨 위로
-            // findViewById<android.widget.ScrollView>(R.id.scrollContainer)?.smoothScrollTo(0, 0)
         }
         tabMypage.setOnClickListener {
             if (currentTab() != Tab.MYPAGE) {
                 startActivity(Intent(this, MypageActivity::class.java))
-                // (선택) 마이페이지 이동도 동일한 fade로 유지
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             }
         }
@@ -84,25 +87,32 @@ class MainPageActivity : AppCompatActivity() {
             repeatCount = TranslateAnimation.INFINITE
             repeatMode = TranslateAnimation.REVERSE
         }
+
+        // 간편정리 버튼 - 로그인 체크
         findViewById<LinearLayout>(R.id.shortcut_easy).setOnClickListener {
-            startActivity(Intent(this, EasyCleanActivity::class.java))
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            checkLoginAndNavigate(EasyCleanActivity::class.java)
         }
 
-        // 용량정리 버튼 클릭 시 이동
-        findViewById<android.widget.LinearLayout>(R.id.shortcut_delete).setOnClickListener {
-            startActivity(android.content.Intent(this, StorageCleanActivity::class.java))
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        // 용량정리 버튼 - 로그인 체크
+        findViewById<LinearLayout>(R.id.shortcut_delete).setOnClickListener {
+            checkLoginAndNavigate(StorageCleanActivity::class.java)
         }
+
+        // 스팸차단 버튼 - 로그인 체크
         findViewById<View>(R.id.shortcut_spam).setOnClickListener {
-            startActivity(Intent(this, BotActivity::class.java))
+            checkLoginAndNavigate(BotActivity::class.java)
         }
+
+        // 보호시작 버튼 - 로그인 체크
         findViewById<TextView>(R.id.actionText).setOnClickListener {
-            startActivity(Intent(this, ProtectionStartActivity::class.java))
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            checkLoginAndNavigate(ProtectionStartActivity::class.java)
         }
-
-
+        findViewById<View>(R.id.btnOpenUsage).setOnClickListener {
+            InfoHostActivity.start(this, InfoHostActivity.Page.USAGE)
+        }
+        findViewById<View>(R.id.btnOpenKnowledge).setOnClickListener {
+            InfoHostActivity.start(this, InfoHostActivity.Page.SECURITY_KNOWLEDGE)
+        }
     }
 
     override fun onResume() {
@@ -114,6 +124,31 @@ class MainPageActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         ghost.clearAnimation()
+    }
+
+    /**
+     * 로그인 상태를 확인하고 페이지로 이동하는 함수
+     * - 로그인되어 있으면: 목적지 Activity로 이동
+     * - 로그인 안 되어 있으면: LoginActivity로 이동
+     */
+    private fun checkLoginAndNavigate(destination: Class<*>) {
+        lifecycleScope.launch {
+            val token = tokenStore.getToken()
+
+            if (token.isNullOrEmpty()) {
+                // 로그인 안 됨 -> 로그인 페이지로
+                val intent = Intent(this@MainPageActivity, LoginActivity::class.java).apply {
+                    // 로그인 후 돌아올 수 있도록 플래그 설정 (선택사항)
+                    // 또는 단순히 로그인 페이지로만 이동
+                }
+                startActivity(intent)
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            } else {
+                // 로그인 됨 -> 목적지로 이동
+                startActivity(Intent(this@MainPageActivity, destination))
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            }
+        }
     }
 
     // ---- 유틸 ----

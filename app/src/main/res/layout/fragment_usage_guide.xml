@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    android:background="#EEEEEE"
+    tools:context=".UsageGuideFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="40dp"> <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="앱 사용법 안내"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#660099"
+        android:layout_marginBottom="24dp"
+        android:gravity="center" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:elevation="4dp"
+            android:layout_marginBottom="30dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1. 실시간 보호 기능 켜기"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="MyPage 화면에서 '실시간 보호' 스위치를 켜게 되면 백그라운드에서 파일 감시가 즉시 시작됩니다.\n앱을 종료해도 기능은 유지됩니다."
+                android:textSize="16sp"
+                android:lineSpacingExtra="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:elevation="4dp"
+            android:layout_marginBottom="30dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="2. 앱 알림 및 권한 설정"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="실시간 보호 기능을 하기 위해선 '파일 접근 권한'이 필요합니다.\n권한이 허용되지 않은 경우에는, MyPage 설정에서 '권한 허용' 버튼을 눌러 필수 권한을 반드시 활성화해 주세요."
+                android:textSize="16sp"
+                android:lineSpacingExtra="5dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/card_background"
+            android:elevation="4dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="3. 검사 결과 확인"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="탐지된 악성코드는 Security 화면에 있는 로그에서 실시간으로 확인할 수 있습니다.\n결과가 나오면 알림을 통해 사용자에게 전달됩니다."
+                android:textSize="16sp"
+                android:lineSpacingExtra="3dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

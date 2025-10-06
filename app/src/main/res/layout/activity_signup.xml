@@ -7,6 +7,17 @@
     android:background="#F4F6FA">
 
     <!-- 상단 유령 이미지 -->
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/ic_chevron_left_purple"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="뒤로가기"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="80dp" />
     <ImageView
         android:id="@+id/signupGhost"
         android:layout_width="140dp"
