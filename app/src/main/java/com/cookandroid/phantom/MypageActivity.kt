@@ -21,6 +21,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import java.util.concurrent.TimeUnit
 
 class MypageActivity : AppCompatActivity() {
 
@@ -42,6 +43,7 @@ class MypageActivity : AppCompatActivity() {
     private lateinit var tvUserName: TextView
     private lateinit var tvUserEmail: TextView
     private lateinit var tvUserPhone: TextView
+    private lateinit var btnEditProfile: TextView
 
     // ====== 액션 버튼 ======
     private lateinit var btnLogout: TextView
@@ -53,9 +55,6 @@ class MypageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mypage)
-        findViewById<View>(R.id.btnEditProfile)?.setOnClickListener {
-            startActivity(Intent(this, ChangePasswordActivity::class.java))
-        }
 
         // ---- 하단 탭 ----
         tabSecurity = findViewById(R.id.tab_security)
@@ -89,32 +88,62 @@ class MypageActivity : AppCompatActivity() {
         tabMypage.setOnClickListener { /* 현재 탭 */ }
 
         // ---- 프로필 뷰 ----
-        tvUserName  = findViewById(R.id.tvUserName)
-        tvUserEmail = findViewById(R.id.tvUserEmail)
-        tvUserPhone = findViewById(R.id.tvUserPhone)
-
-        tvUserName.visibility = View.VISIBLE
-        tvUserName.text = "팬텀 사용자"
+        tvUserName      = findViewById(R.id.tvUserName)
+        tvUserEmail     = findViewById(R.id.tvUserEmail)
+        tvUserPhone     = findViewById(R.id.tvUserPhone)
+        btnEditProfile  = findViewById(R.id.btnEditProfile)
 
         // ---- 액션 버튼 ----
         btnLogout        = findViewById(R.id.btnLogout)
         btnDeleteAccount = findViewById(R.id.btnDeleteAccount)
 
-        btnLogout.setOnClickListener {
-            clearToken_M(this)
-            Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
-            goLoginClearTask()
-        }
-
-        btnDeleteAccount.setOnClickListener {
-            showDeleteConfirm()
-        }
-
         // ---- Retrofit 준비 (/api/ base) ----
         userApi = buildRetrofitWithAuth_M(this).create(MUserApi::class.java)
 
-        // ---- 프로필 로딩 ----
-        fetchProfile()
+        // ---- 로그인 여부에 따라 UI 스위칭 ----
+        val isLoggedIn = !getToken_M(this).isNullOrBlank()
+        if (isLoggedIn) {
+            // 로그인 상태
+            tvUserName.visibility = View.VISIBLE
+            tvUserName.text = "팬텀 사용자"
+
+            tvUserEmail.visibility = View.VISIBLE
+            tvUserPhone.visibility = View.VISIBLE
+            btnLogout.visibility = View.VISIBLE
+            btnDeleteAccount.visibility = View.VISIBLE
+
+            // ▶ 프로필 수정 → 비밀번호 변경 화면
+            btnEditProfile.text = "비밀번호 변경"
+            btnEditProfile.setTextColor(PURPLE)
+            btnEditProfile.setOnClickListener {
+                startActivity(Intent(this, ChangePasswordActivity::class.java))
+            }
+
+            btnLogout.setOnClickListener {
+                clearToken_M(this)
+                Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+                goLoginClearTask()
+            }
+            btnDeleteAccount.setOnClickListener { showDeleteConfirm() }
+
+            // 프로필 로딩
+            fetchProfile()
+        } else {
+            // 비로그인 상태
+            tvUserName.visibility = View.VISIBLE
+            tvUserName.text = "로그인이 필요합니다"
+
+            tvUserEmail.visibility = View.GONE
+            tvUserPhone.visibility = View.GONE
+            btnLogout.visibility = View.GONE
+            btnDeleteAccount.visibility = View.GONE
+
+            btnEditProfile.text = "로그인"
+            btnEditProfile.setTextColor(PURPLE)
+            btnEditProfile.setOnClickListener {
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
+        }
     }
 
     override fun onResume() {
@@ -169,13 +198,10 @@ class MypageActivity : AppCompatActivity() {
     }
 
     private fun deleteAccount() {
-        // 버튼 중복 클릭 방지
-        setActionsEnabled(false)
+        setActionsEnabled(false) // 버튼 중복 클릭 방지
         lifecycleScope.launch {
             try {
-                val res: Response<MDeleteResponse> = withContext(Dispatchers.IO) {
-                    userApi.deleteAccount()
-                }
+                val res: Response<MDeleteResponse> = withContext(Dispatchers.IO) { userApi.deleteAccount() }
                 if (res.isSuccessful) {
                     val msg = res.body()?.message ?: "계정이 성공적으로 삭제되었습니다."
                     toast(msg)
@@ -225,7 +251,6 @@ class MypageActivity : AppCompatActivity() {
 
 // =================== (이 파일 전용) 네트워크 유틸/모델 ===================
 
-// 서버가 user 래핑 없이 바로 User JSON을 반환한다고 가정 (flat)
 private data class MProfileResponse(
     val id: String? = null,
     val email: String? = null,
@@ -237,7 +262,6 @@ private data class MDeleteResponse(
 )
 
 private interface MUserApi {
-    // baseUrl = http://10.0.2.2:8080/ → 절대경로로 /api/... 사용
     @GET("/api/user/profile")
     suspend fun getProfile(): Response<MProfileResponse>
 
@@ -273,9 +297,9 @@ private fun buildRetrofitWithAuth_M(ctx: Context): Retrofit {
 
     val client = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
-        .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
-        .writeTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .writeTimeout(20, TimeUnit.SECONDS)
         .build()
 
     return Retrofit.Builder()

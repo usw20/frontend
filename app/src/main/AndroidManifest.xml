@@ -5,7 +5,11 @@
     <!-- 네트워크/알림/포그라운드 서비스 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Android 13+ 알림 권한: 하위 버전에선 무시됨 -->
+    <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS"
+        tools:targetApi="33" />
 
     <application
         android:usesCleartextTraffic="true"
@@ -57,6 +61,12 @@
             android:exported="false" />
         <activity android:name=".EasyCleanActivity" android:exported="false" />
 
+        <!-- ✅ 정보 호스트 (사용법/보안상식) -->
+        <activity
+            android:name=".InfoHostActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
         <!-- 봇 -->
         <activity
             android:name=".BotActivity"
@@ -64,7 +74,7 @@
             android:parentActivityName=".MainPageActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Foreground Service (중복 선언 제거!) -->
+        <!-- Foreground Service -->
         <service
             android:name=".ProtectionService"
             android:exported="false"

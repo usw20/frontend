@@ -5,8 +5,10 @@ import android.os.Bundle
 import android.util.Patterns
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.cookandroid.phantom.data.local.TokenDataStore
@@ -49,23 +51,28 @@ class LoginActivity : AppCompatActivity() {
         tvFindId = findViewById(R.id.tvFindId)
         tvForgotPw = findViewById(R.id.tvForgotPw)
 
+        // ✅ 뒤로가기(상단 아이콘) -> 메인으로
+        findViewById<ImageButton>(R.id.back_button).setOnClickListener { goMain() }
+
+        // ✅ 시스템 뒤로가기 버튼도 동일 동작
+        onBackPressedDispatcher.addCallback(this) { goMain() }
+
         // 로그인
         btnLogin.setOnClickListener { doLogin() }
 
-        // 회원가입 페이지로 이동
-        linkSignup.setOnClickListener {
-            startActivity(Intent(this, SignUpActivity::class.java))
-        }
+        // 회원가입 / 아이디찾기 / 비번찾기 이동
+        linkSignup.setOnClickListener { startActivity(Intent(this, SignUpActivity::class.java)) }
+        tvFindId.setOnClickListener { startActivity(Intent(this, FindIdActivity::class.java)) }
+        tvForgotPw.setOnClickListener { startActivity(Intent(this, ForgotPasswordActivity::class.java)) }
+    }
 
-        // 아이디 찾기 페이지로 이동
-        tvFindId.setOnClickListener {
-            startActivity(Intent(this, FindIdActivity::class.java))
+    private fun goMain() {
+        val intent = Intent(this, MainPageActivity::class.java).apply {
+            // 메인이 이미 스택에 있으면 그 위 액티비티들 정리하고 복귀
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
-
-        // 비밀번호 찾기 페이지로 이동
-        tvForgotPw.setOnClickListener {
-            startActivity(Intent(this, ForgotPasswordActivity::class.java))
-        }
+        startActivity(intent)
+        finish() // 현재(Login) 종료
     }
 
     private fun setupRetrofit() {
