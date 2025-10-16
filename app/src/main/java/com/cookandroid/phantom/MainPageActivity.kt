@@ -93,9 +93,9 @@ class MainPageActivity : AppCompatActivity() {
             checkLoginAndNavigate(EasyCleanActivity::class.java)
         }
 
-        // 용량정리 버튼 - 로그인 체크
+        // 스팸 버튼 - 로그인 체크
         findViewById<LinearLayout>(R.id.shortcut_delete).setOnClickListener {
-            checkLoginAndNavigate(StorageCleanActivity::class.java)
+            checkLoginAndNavigate(`SpamCheckActivity`::class.java)
         }
 
         // 스팸차단 버튼 - 로그인 체크

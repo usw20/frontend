@@ -56,7 +56,7 @@
         <activity android:name=".ProtectionStartActivity" android:exported="false" />
         <activity android:name=".ProtectionActivity" android:exported="false" />
         <activity
-            android:name=".StorageCleanActivity"
+            android:name=".SpamCheckActivity"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar"
             android:exported="false" />
         <activity android:name=".EasyCleanActivity" android:exported="false" />
