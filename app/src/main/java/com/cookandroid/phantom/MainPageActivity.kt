@@ -103,10 +103,6 @@ class MainPageActivity : AppCompatActivity() {
             checkLoginAndNavigate(BotActivity::class.java)
         }
 
-        // 보호시작 버튼 - 로그인 체크
-        findViewById<TextView>(R.id.actionText).setOnClickListener {
-            checkLoginAndNavigate(ProtectionStartActivity::class.java)
-        }
         findViewById<View>(R.id.btnOpenUsage).setOnClickListener {
             InfoHostActivity.start(this, InfoHostActivity.Page.USAGE)
         }

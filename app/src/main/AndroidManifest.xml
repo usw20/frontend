@@ -53,8 +53,6 @@
         <activity android:name=".MainPageActivity" android:exported="false" />
         <activity android:name=".SecurityActivity" android:exported="false" />
         <activity android:name=".MypageActivity" android:exported="false" />
-        <activity android:name=".ProtectionStartActivity" android:exported="false" />
-        <activity android:name=".ProtectionActivity" android:exported="false" />
         <activity
             android:name=".SpamCheckActivity"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar"
