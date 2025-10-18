@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 배경 원 -->
+    <item>
+        <shape android:shape="oval">
+            <size android:width="60dp" android:height="60dp"/>
+            <solid android:color="@color/white"/>
+            <stroke android:width="1dp" android:color="#11000000"/>
+        </shape>
+    </item>
+
+    <!-- 유령 아이콘 (아이콘만 크기 조절) -->
+    <item
+        android:width="44dp"/>
+</layer-list>

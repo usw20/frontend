@@ -97,7 +97,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="40dp"
-                    android:text="실시간 보호 시작하기 >"
+                    android:text="다양한 보호 기능"
                     android:textColor="#660099"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -171,17 +171,30 @@
                     app:layout_constraintStart_toEndOf="@id/shortcut_easy"
                     app:layout_constraintEnd_toStartOf="@id/shortcut_spam">
 
-                    <ImageView
+                    <!-- 배경 원 60dp + 유령 아이콘 크게(52dp) -->
+                    <FrameLayout
                         android:layout_width="60dp"
+                        android:layout_height="60dp">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/circle_bg" />
+
+                        <ImageView
+                            android:layout_width="60dp"
                         android:layout_height="60dp"
-                        android:background="@drawable/circle_bg"
-                        android:src="@drawable/ic_delete"
-                        android:padding="6dp"/>
+                        android:layout_gravity="center"
+                        android:src="@drawable/spam_image_ghost"
+                        android:contentDescription="@string/app_name"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"/>
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="용량정리"
+                        android:text="스팸 탐지"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#660099"
@@ -200,11 +213,25 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_margin="12dp">
 
-                    <ImageView
-                        android:layout_width="65dp"
-                        android:layout_height="65dp"
-                        android:background="@drawable/circle_bg"
-                        android:src="@drawable/ic_spam" />
+                    <!-- 배경 원 65dp + 아이콘 크게(57dp) -->
+                    <FrameLayout
+                        android:layout_width="60dp"
+                        android:layout_height="60dp">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/circle_bg" />
+
+                        <ImageView
+                            android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_spam"
+                        android:contentDescription="@string/app_name"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"/>
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -215,6 +242,7 @@
                         android:textColor="#660099"
                         android:layout_marginTop="8dp" />
                 </LinearLayout>
+
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <!-- 광고 배너 -->
