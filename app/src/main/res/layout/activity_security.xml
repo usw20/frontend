@@ -69,18 +69,6 @@
                             android:textColor="#660099"
                             android:textSize="36sp"
                             android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvStatusSpam"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/status_bg"
-                            android:includeFontPadding="false"
-                            android:text="실시간 감시 중"
-                            android:textColor="#660099"
-                            android:textSize="8sp"
-                            android:drawablePadding="4dp"
-                            android:drawableLeft="@drawable/green_dot" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -117,18 +105,6 @@
                             android:textSize="36sp"
                             android:textColor="#660099"
                             android:layout_marginTop="8dp"/>
-
-                        <TextView
-                            android:id="@+id/tvStatusMalware"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/status_bg"
-                            android:includeFontPadding="false"
-                            android:text="실시간 감시 중"
-                            android:textColor="#660099"
-                            android:textSize="8sp"
-                            android:drawablePadding="4dp"
-                            android:drawableLeft="@drawable/green_dot" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>

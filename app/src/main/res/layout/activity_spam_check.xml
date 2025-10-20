@@ -40,6 +40,37 @@
             android:textSize="18sp"/>
     </FrameLayout>
 
+    <!-- 🔔 실시간 스팸/피싱 알림 스위치 (간단 버전) -->
+    <LinearLayout
+        android:id="@+id/alertsRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="6dp"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvAlertsTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="실시간 스팸/피싱 알림"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:textSize="15sp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchAlerts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
     <!-- 설명 -->
     <TextView
         android:id="@+id/tvGuide"
@@ -49,12 +80,12 @@
         android:textColor="#000000"
         android:textSize="14sp"
         android:gravity="start"
-        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintTop_toBottomOf="@id/alertsRow"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
-        android:layout_marginTop="14dp"/>
+        android:layout_marginTop="8dp"/>
 
     <!-- 입력 -->
     <EditText

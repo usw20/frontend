@@ -2,10 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.cookandroid.phantom">
 
-    <!-- 네트워크/알림/포그라운드 서비스 권한 -->
+    <!-- 네트워크/알림 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
     <!-- Android 13+ 알림 권한: 하위 버전에선 무시됨 -->
     <uses-permission
         android:name="android.permission.POST_NOTIFICATIONS"
@@ -72,11 +71,23 @@
             android:parentActivityName=".MainPageActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Foreground Service -->
+        <!-- ✅ Notification Listener Service (알림 텍스트 감시) -->
         <service
-            android:name=".ProtectionService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"
-            tools:ignore="ForegroundServicePermission" />
+            android:name=".notification.MyNotificationListener"
+            android:exported="true"
+            android:label="Phantom Notification Listener"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!-- ✅ '텍스트 복사' 액션용 브로드캐스트 리시버 -->
+        <receiver
+            android:name=".notification.CopyActionReceiver"
+            android:exported="true" />
+
+        <!-- 만약 별도의 Foreground Service(ProtectionService)를 사용하지 않는다면
+             예전 선언은 제거했습니다. 실제로 쓸 계획이면 별도로 올바른 권한/타입으로 다시 추가하세요. -->
     </application>
 </manifest>
