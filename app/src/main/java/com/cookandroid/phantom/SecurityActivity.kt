@@ -1,9 +1,10 @@
 package com.cookandroid.phantom
 
 import android.annotation.SuppressLint
-import android.content.*
-import android.graphics.Color
-import android.graphics.drawable.Drawable
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -22,6 +23,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 
 class SecurityActivity : AppCompatActivity() {
+
+    companion object {
+        // ProtectionService가 브로드캐스트로 보낸다고 가정하는 액션/엑스트라
+        // (서비스 쪽과 문자열이 다르면 여기 문자열을 서비스와 맞춰주세요)
+        const val ACTION_PROTECTION_TICK = "com.cookandroid.phantom.PROTECTION_TICK"
+        const val EXTRA_PHISHING = "extra_phishing_count"
+        const val EXTRA_MALWARE = "extra_malware_count"
+        // 필요 시 isActive 같은 것도 쓰고 싶으면 EXTRA_ACTIVE 추가 정의 가능
+        // const val EXTRA_ACTIVE = "extra_active"
+    }
 
     // ==== 이 화면에서만 쓰는 DTO (서버 히스토리용) ====
     data class MalwareScanLogDto(
@@ -48,8 +59,6 @@ class SecurityActivity : AppCompatActivity() {
     // views
     private lateinit var tvSpam: TextView
     private lateinit var tvMalware: TextView
-    private lateinit var tvStatusSpam: TextView
-    private lateinit var tvStatusMalware: TextView
     private lateinit var recycler: RecyclerView
     private lateinit var tabSecurity: LinearLayout
     private lateinit var tabHome: LinearLayout
@@ -82,7 +91,7 @@ class SecurityActivity : AppCompatActivity() {
             .build()
     }
 
-    // === 읽기 전용 API (이름 충돌 방지) ===
+    // === 읽기 전용 API ===
     interface MalwareReadApi {
         @GET("/api/malware/statistics") suspend fun stats(): Response<Map<String, Long>>
         @GET("/api/malware/history")    suspend fun history(): Response<List<MalwareScanLogDto>>
@@ -96,29 +105,24 @@ class SecurityActivity : AppCompatActivity() {
     private val malwareApi by lazy { retrofit.create(MalwareReadApi::class.java) }
     private val phishingApi by lazy { retrofit.create(PhishingReadApi::class.java) }
 
-    // === 5초마다 ProtectionService가 쏘는 브로드캐스트 수신 ===
+    // === ProtectionService(또는 유사 서비스)가 주기적으로 보내는 브로드캐스트 수신 ===
     private val tickReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != ACTION_PROTECTION_TICK) return
-            val active = intent.getBooleanExtra(EXTRA_ACTIVE, false)
             val spam = intent.getIntExtra(EXTRA_PHISHING, 0)
             val malware = intent.getIntExtra(EXTRA_MALWARE, 0)
-
-            applyStatus(active)          // 초록/빨강 상태 반영
             tvSpam.text = spam.toString()
             tvMalware.text = malware.toString()
         }
     }
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // ⬇️ XML: activity_security.xml
         setContentView(R.layout.activity_security)
 
         tvSpam = findViewById(R.id.tvSpam)
         tvMalware = findViewById(R.id.tvMalware)
-        tvStatusSpam = findViewById(R.id.tvStatusSpam)
-        tvStatusMalware = findViewById(R.id.tvStatusMalware)
         recycler = findViewById(R.id.recyclerLogs)
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = SecurityLogAdapter()
@@ -131,10 +135,7 @@ class SecurityActivity : AppCompatActivity() {
         tabHome.setOnClickListener { startActivity(Intent(this, MainPageActivity::class.java)) }
         tabMypage.setOnClickListener { startActivity(Intent(this, MypageActivity::class.java)) }
 
-        // 보호 상태(서비스 실행 여부) 반영
-        applyStatus(ProtectionService.isRunning(this))
-
-        // 최초 1회 서버 통계 & 로그 로드
+        // 초기 서버 통계 & 로그 1회 로드
         loadStatsAndLogs()
     }
 
@@ -158,31 +159,6 @@ class SecurityActivity : AppCompatActivity() {
         uiScope.cancel()
         super.onDestroy()
     }
-
-    // ===== 상태(초록/빨강) UI =====
-    private fun applyStatus(active: Boolean) {
-        if (active) {
-            setStatus(tvStatusSpam, "실시간 감시 중", true)
-            setStatus(tvStatusMalware, "실시간 감시 중", true)
-        } else {
-            setStatus(tvStatusSpam, "감지중이 아닙니다", false)
-            setStatus(tvStatusMalware, "감지중이 아닙니다", false)
-        }
-    }
-
-    private fun setStatus(tv: TextView, text: String, isActive: Boolean) {
-        tv.text = text
-        // 점 아이콘 (green_dot / red_dot)
-        tv.setCompoundDrawablesWithIntrinsicBounds(getDot(isActive), null, null, null)
-        tv.compoundDrawablePadding = dp(4)
-        // 텍스트 색도 함께 바꿈
-        tv.setTextColor(Color.parseColor(if (isActive) "#12AF5D" else "#E54848"))
-    }
-
-    private fun getDot(green: Boolean): Drawable? =
-        resources.getDrawable(if (green) R.drawable.green_dot else R.drawable.red_dot, theme)
-
-    private fun dp(v: Int): Int = (resources.displayMetrics.density * v).toInt()
 
     // ===== 서버에서 통계/로그 1회 가져오기 =====
     private fun loadStatsAndLogs() {

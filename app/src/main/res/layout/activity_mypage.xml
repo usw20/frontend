@@ -176,37 +176,6 @@
                         android:textSize="16sp"
                         android:textColor="#660099"/>
 
-                    <!-- 항목 1: 실시간 보호 -->
-                    <LinearLayout
-                        android:id="@+id/rowRealtime"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="8dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/shield"
-                            android:contentDescription="실시간 보호"/>
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="실시간 보호"
-                            android:textColor="#000000"
-                            android:textSize="14sp"
-                            android:layout_marginStart="10dp"/>
-
-                        <Switch
-                            android:id="@+id/swRealtime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-                    </LinearLayout>
-
                     <!-- 항목 2: 개인정보 권한 -->
                     <LinearLayout
                         android:id="@+id/rowPrivacy"

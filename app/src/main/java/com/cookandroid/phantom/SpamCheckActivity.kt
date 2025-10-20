@@ -1,8 +1,14 @@
 package com.cookandroid.phantom
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.ComponentName
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -12,7 +18,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.cardview.widget.CardView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.*
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -25,6 +34,18 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class SpamCheckActivity : AppCompatActivity() {
+
+    companion object {
+        // 알림에서 텍스트를 전달받을 때 사용할 키 (알림 측과 동일해야 함)
+        const val EXTRA_TEXT = "com.cookandroid.phantom.EXTRA_TEXT"
+
+        // SharedPreferences
+        private const val PREFS = "phantom_prefs"
+        private const val KEY_TOKEN = "jwt_token"
+        private const val KEY_ALERTS = "alerts_enabled"
+
+        private const val REQ_POST_NOTI = 2000
+    }
 
     // ===== DTO =====
     data class PhishingScanRequest(
@@ -61,14 +82,12 @@ class SpamCheckActivity : AppCompatActivity() {
     private lateinit var tvResult: TextView
     private lateinit var tvScore: TextView
     private lateinit var tvReasons: TextView
+    private lateinit var switchAlerts: SwitchCompat
 
     // Coroutine
     private val uiScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     // Retrofit
-    private val PREFS = "phantom_prefs"
-    private val KEY_TOKEN = "jwt_token"
-
     private fun getToken(): String? =
         getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_TOKEN, null)
 
@@ -81,7 +100,10 @@ class SpamCheckActivity : AppCompatActivity() {
             else req
             chain.proceed(newReq)
         }
-        val client = OkHttpClient.Builder().addInterceptor(authInterceptor).build()
+        val client = OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .build()
+
         return Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8080/")
             .client(client)
@@ -91,12 +113,17 @@ class SpamCheckActivity : AppCompatActivity() {
 
     private val phishingApi by lazy { buildRetrofit().create(PhishingApi::class.java) }
 
+    // runtime permission callback 저장용
+    private var pendingNotifPermissionResult: ((Boolean) -> Unit)? = null
+
+    @SuppressLint("MissingInflatedId")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_spam_check)
 
         // 뷰 초기화
+        switchAlerts = findViewById(R.id.switchAlerts)
         btnBack = findViewById(R.id.btnBack)
         etMessage = findViewById(R.id.etMessage)
         btnScan = findViewById(R.id.btnScan)
@@ -114,7 +141,8 @@ class SpamCheckActivity : AppCompatActivity() {
         // 엔터키로 전송
         etMessage.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND ||
-                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            ) {
                 performScan()
                 true
             } else false
@@ -122,6 +150,78 @@ class SpamCheckActivity : AppCompatActivity() {
 
         // 초기 상태
         resetResult()
+
+        // 알림 토글 초기값: 저장된 값 && (알림접근 허용) && (로그인)
+        val sp = getSharedPreferences(PREFS, MODE_PRIVATE)
+        val saved = sp.getBoolean(KEY_ALERTS, false)
+        val enabledNow = saved && isNotificationListenerEnabled() && isLoggedIn()
+        switchAlerts.isChecked = enabledNow
+
+        switchAlerts.setOnCheckedChangeListener { button, isChecked ->
+            if (isChecked) {
+                // 1) 로그인 확인
+                if (!isLoggedIn()) {
+                    toast("로그인 후 사용 가능합니다.")
+                    button.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+                // 2) (Android 13+) 알림 권한 요청
+                ensurePostNotificationsPermission { granted ->
+                    if (!granted) {
+                        toast("알림 권한이 필요합니다.")
+                        button.isChecked = false
+                        return@ensurePostNotificationsPermission
+                    }
+                    // 3) 알림 접근 허용 확인
+                    if (!isNotificationListenerEnabled()) {
+                        toast("알림 접근 권한을 켜주세요.")
+                        startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+                        button.isChecked = false
+                        return@ensurePostNotificationsPermission
+                    }
+                    // 모두 통과 → 저장
+                    sp.edit().putBoolean(KEY_ALERTS, true).apply()
+                    toast("실시간 감시가 활성화되었습니다.")
+                }
+            } else {
+                sp.edit().putBoolean(KEY_ALERTS, false).apply()
+                toast("실시간 감시를 비활성화했습니다.")
+            }
+        }
+
+        // 알림에서 전달된 텍스트 처리
+        handleIncomingTextFromIntent(intent)
+    }
+
+    // 이미 열려있는 상태에서 또 들어온 인텐트도 처리
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleIncomingTextFromIntent(intent)
+    }
+
+    // 권한 요청 결과 처리
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_POST_NOTI) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            pendingNotifPermissionResult?.invoke(granted)
+            pendingNotifPermissionResult = null
+        }
+    }
+
+    // 알림에서 넘어온 텍스트를 입력창에 채우고, 원하면 자동 스캔까지
+    private fun handleIncomingTextFromIntent(incoming: Intent?) {
+        val textFromNotif = incoming?.getStringExtra(EXTRA_TEXT)
+        if (!textFromNotif.isNullOrBlank()) {
+            etMessage.setText(textFromNotif)
+            Toast.makeText(this, "알림 텍스트를 불러왔습니다. 확인을 눌러 스캔하세요.", Toast.LENGTH_SHORT).show()
+            // 자동 스캔을 원하면 아래 주석 해제
+            // performScan()
+        }
     }
 
     override fun onDestroy() {
@@ -153,7 +253,7 @@ class SpamCheckActivity : AppCompatActivity() {
                 // 요청 생성
                 val request = PhishingScanRequest(
                     deviceId = getPhantomDeviceId(),
-                    sourceType = "manual",  // 수동 입력
+                    sourceType = "manual",  // 수동 입력/알림 통해 들어온 경우에도 'manual'로 기록
                     textContent = message,
                     timestamp = getCurrentTimestamp(),
                     extractedUrls = urls
@@ -256,7 +356,8 @@ class SpamCheckActivity : AppCompatActivity() {
 
     // URL 추출
     private fun extractUrls(text: String): List<String> {
-        val urlPattern = "(?i)\\b(?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\([^\\s()<>]+\\))+"
+        val urlPattern =
+            "(?i)\\b(?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\([^\\s()<>]+\\))+"
         return Regex(urlPattern).findAll(text).map { it.value }.toList()
     }
 
@@ -304,5 +405,31 @@ class SpamCheckActivity : AppCompatActivity() {
             lower.contains("click") -> "클릭 유도"
             else -> indicator
         }
+    }
+
+    // ===== 유틸 =====
+    private fun toast(msg: String) =
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+    private fun isLoggedIn(): Boolean {
+        val sp = getSharedPreferences(PREFS, MODE_PRIVATE)
+        val token = sp.getString(KEY_TOKEN, null)
+        return !token.isNullOrBlank()
+    }
+
+    private fun isNotificationListenerEnabled(): Boolean {
+        // 알림 접근 허용 목록 문자열에서 우리 리스너 컴포넌트 존재 여부 확인
+        val cn = ComponentName(this, com.cookandroid.phantom.notification.MyNotificationListener::class.java)
+        val flat = Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: return false
+        return flat.split(":").any { it.equals(cn.flattenToString(), ignoreCase = true) }
+    }
+
+    private fun ensurePostNotificationsPermission(onResult: (Boolean) -> Unit) {
+        if (Build.VERSION.SDK_INT < 33) { onResult(true); return }
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+        if (granted) { onResult(true); return }
+        pendingNotifPermissionResult = onResult
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_POST_NOTI)
     }
 }
