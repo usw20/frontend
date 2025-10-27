@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/accelerate_decelerate_interpolator">
+
+    <!-- 1) 슬라이드 업 + 페이드인 (동시) -->
+    <translate
+        android:fromYDelta="20%"
+        android:toYDelta="0%"
+        android:duration="400" />
+
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="400" />
+
+    <!-- 2) 바운스 (두 단계 스케일) -->
+    <scale
+        android:fromXScale="1.0"
+        android:toXScale="0.95"
+        android:fromYScale="1.0"
+        android:toYScale="0.95"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:duration="100"
+        android:startOffset="400"
+        android:interpolator="@android:anim/bounce_interpolator" />
+
+    <scale
+        android:fromXScale="0.95"
+        android:toXScale="1.0"
+        android:fromYScale="0.95"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:duration="100"
+        android:startOffset="500"
+        android:interpolator="@android:anim/bounce_interpolator" />
+
+    <!-- 3) 펄스(맥박) - 지속 반복 -->
+    <scale
+        android:fromXScale="1.0"
+        android:toXScale="1.1"
+        android:fromYScale="1.0"
+        android:toYScale="1.1"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:duration="600"
+        android:startOffset="700"
+        android:repeatMode="reverse"
+        android:repeatCount="infinite" />
+
+</set>
