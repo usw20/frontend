@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.cookandroid.phantom.model.ScanResult
 import android.content.pm.PackageManager
+import android.view.MenuItem
+import android.util.Log
 
 class AppDetailActivity : AppCompatActivity() {
 
@@ -23,6 +25,12 @@ class AppDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_app_detail)
+
+        // ⭐️ 1. Toolbar 설정 및 뒤로가기 버튼 활성화
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true) // 뒤로가기 화살표 표시
+        supportActionBar?.title = "앱 상세 정보"
 
         // 1. Intent에서 Parcelable 데이터 수신
         result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -41,6 +49,17 @@ class AppDetailActivity : AppCompatActivity() {
 
         // 3. 앱 제거 버튼 설정 및 리스너 연결
         setupDeleteButton(result)
+    }
+
+    // ⭐️ 2. 뒤로가기 버튼 클릭 이벤트 처리
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                onBackPressed() // 시스템 뒤로가기 호출
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun updateUI(result: ScanResult) {
@@ -98,33 +117,62 @@ class AppDetailActivity : AppCompatActivity() {
     private fun setupDeleteButton(result: ScanResult) {
         val btnDelete: Button = findViewById(R.id.btnDeleteApp)
 
+        // ⭐️ 2. 버튼이 활성화되지 않는 경우를 확인하기 위해 리스너를 else 블록 밖으로 이동시킵니다.
+        btnDelete.setOnClickListener {
+            // ⭐️ 3. 클릭 시 로그를 출력하여 리스너가 호출되는지 확인
+            Log.d("DeleteCheck", "Delete button clicked! Is Malicious: ${result.isMalicious}")
+
+            if (result.isMalicious) {
+                uninstallApp(this, result.appInfo.packageName)
+            } else {
+                // 버튼이 비활성화 상태에서 클릭될 일은 없지만, 로그 확인용
+                Toast.makeText(this, "제거 대상이 아닙니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         if (result.isMalicious) {
             // 악성 앱일 경우에만 버튼 활성화 및 스타일 변경
             btnDelete.isEnabled = true
             btnDelete.text = "앱 제거 (권장 조치)"
-            btnDelete.setBackgroundColor(Color.RED) // 삭제는 경고색
-
-            btnDelete.setOnClickListener {
-                // 앱 삭제 확인 다이얼로그 후 시스템 인텐트 호출
-                uninstallApp(this, result.appInfo.packageName)
-            }
+            btnDelete.setBackgroundColor(Color.RED)
         } else {
-            // 안전하거나 오류 상태일 경우, 버튼을 '정보' 또는 '비활성화'로 설정
+            // 안전하거나 오류 상태일 경우
             btnDelete.isEnabled = false
             btnDelete.text = "안전함"
         }
+    }
+
+    companion object {
+        private const val UNINSTALL_REQUEST_CODE = 42
     }
 
     /**
      * 특정 패키지 이름의 앱을 제거하는 시스템 인텐트를 호출합니다.
      */
     private fun uninstallApp(context: Context, packageName: String) {
+
+        // 1. Uri.fromParts를 사용하여 'package' 스키마와 패키지 이름을 연결합니다.
+        val packageUri = Uri.fromParts("package", packageName, null)
+
+        // 2. ACTION_DELETE 인텐트를 생성하고 데이터를 설정합니다.
         val intent = Intent(Intent.ACTION_DELETE).apply {
-            data = Uri.fromParts("package", packageName, null)
+            // data = packageUri와 동일한 역할을 합니다.
+            data = packageUri
         }
-        // 사용자가 앱 삭제를 취소하거나 완료하면, onActivityResult가 아닌 onResume()이 호출될 수 있습니다.
-        startActivity(intent)
-        // 삭제 인텐트 호출 후, 보통 Activity를 종료하거나 목록을 새로고침하는 로직을 추가합니다.
-        finish()
+
+        // ⭐️ [변경] startActivityForResult 호출
+        startActivityForResult(intent, UNINSTALL_REQUEST_CODE)
     }
+
+    // AppDetailActivity에 onActivityResult 콜백 추가
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == UNINSTALL_REQUEST_CODE) {
+            // 앱 삭제를 시도한 후 돌아왔다면, AppDetailActivity의 역할은 끝났으므로 종료합니다.
+            // 앱이 실제로 삭제되었는지 여부(resultCode)와 관계없이 상세 화면은 닫아야 합니다.
+            finish()
+        }
+    }
+
 }

@@ -1,5 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="pastel_bg">#FFFDF7</color>
+
+    <color name="pastel_purple_strong">#7C4DFF</color>
+    <color name="pastel_text_primary">#2A2A2A</color>
+    <color name="pastel_text_secondary">#6E6E6E</color>
+
+    <color name="mint_100">#E9FFF4</color>
+    <color name="pink_100">#FFF0FA</color>
+    <color name="sky_100">#EFF8FF</color>
 </resources>
