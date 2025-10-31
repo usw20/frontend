@@ -432,22 +432,29 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp">
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="6dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:background="@drawable/shadow"
-                        android:padding="14dp">
+                        android:background="@drawable/bg_card_soft"
+                        android:padding="18dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📖"
+                            android:textSize="28sp"
+                            android:layout_marginBottom="6dp"/>
 
                         <TextView
                             android:id="@+id/usageTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="앱 사용법 안내"
-                            android:textColor="#660099"
+                            android:textColor="@color/pastel_purple_strong"
                             android:textStyle="bold"
                             android:textSize="15sp"/>
 
@@ -456,45 +463,53 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="핵심 기능을 빠르게 익혀보세요."
-                            android:textColor="#000000"
-                            android:textSize="12sp"/>
+                            android:text="핵심 기능을 빠르게 익혀보세요 ✨"
+                            android:textColor="@color/pastel_text_secondary"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="2dp"/>
 
                         <Button
                             android:id="@+id/btnOpenUsage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="자세히 보기"
+                            android:layout_width="match_parent"
+                            android:layout_height="42dp"
+                            android:text="자세히 보기 →"
                             android:textStyle="bold"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"
-                            android:backgroundTint="#660099"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:background="@drawable/bg_btn_purple"
                             android:layout_marginTop="10dp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- 오른쪽: 모바일 보안 상식 -->
+                <!-- 모바일 보안 상식 -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp">
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="6dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:background="@drawable/shadow"
-                        android:padding="14dp">
+                        android:background="@drawable/bg_card_soft"
+                        android:padding="18dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="💡"
+                            android:textSize="28sp"
+                            android:layout_marginBottom="6dp"/>
 
                         <TextView
                             android:id="@+id/knowledgeTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="모바일 보안 상식"
-                            android:textColor="#660099"
+                            android:textColor="@color/pastel_purple_strong"
                             android:textStyle="bold"
                             android:textSize="15sp"/>
 
@@ -503,19 +518,20 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="악성코드/권한/위협 인사이트"
-                            android:textColor="#000000"
-                            android:textSize="12sp"/>
+                            android:text="악성코드/권한/위협 인사이트 🔍"
+                            android:textColor="@color/pastel_text_secondary"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="2dp"/>
 
                         <Button
                             android:id="@+id/btnOpenKnowledge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="자세히 보기"
+                            android:layout_width="match_parent"
+                            android:layout_height="42dp"
+                            android:text="자세히 보기 →"
                             android:textStyle="bold"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"
-                            android:backgroundTint="#660099"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:background="@drawable/bg_btn_purple"
                             android:layout_marginTop="10dp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

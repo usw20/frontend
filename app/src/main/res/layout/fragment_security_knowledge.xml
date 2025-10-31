@@ -4,139 +4,376 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
-    android:background="#EEEEEE"
+    android:padding="0dp"
+    android:background="@color/pastel_bg"
     tools:context=".SecurityKnowledgeFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="40dp">
+        android:padding="20dp"
+        android:paddingBottom="48dp">
 
-        <TextView
+        <!-- ✅ 헤더: 뒤로가기(좌측) + 중앙 타이틀/부제/칩 -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="모바일 보안 상식"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textColor="#660099"
-            android:gravity="center"
-            android:layout_marginBottom="30dp" />
+            android:paddingTop="4dp"
+            android:paddingBottom="12dp">
+            <!-- 중앙 타이틀/부제/칩 묶음 -->
+            <LinearLayout
+                android:id="@+id/title_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="모바일 보안 상식"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="#660099"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="가볍게 읽는 보안 습관 ✨"
+                    android:textSize="14sp"
+                    android:textColor="@color/pastel_text_secondary" />
+
+                <!-- 작은 칩 배지 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_chip_soft"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:text="초보자도 OK 🌈"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- 섹션 1: 해시값 기반 검사 -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/card_background"
-            android:elevation="4dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp">
 
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/ic_protect"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="12dp" />
-
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="1. 해시값 기반 악성코드 검사 원리"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="8dp" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_gradient_lavender"
+                android:padding="16dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="모든 파일에는 고유한 '디지털 지문'이 있습니다.\n저희 앱은 이러한 지문을 수집하여 대규모 악성코드 데이터베이스와 비교합니다.\n이 때 일치하면 악성코드로 판별합니다."
-                android:textSize="16sp"
-                android:lineSpacingExtra="4dp" />
-        </LinearLayout>
+                <!-- 제목 줄 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="8dp">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="24dp" />
+                    <ImageView
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:src="@drawable/ic_protect"
+                        android:background="@drawable/bg_icon_circle"
+                        android:padding="10dp" />
 
-        <LinearLayout
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1. 해시값 기반 악성코드 검사 원리"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/pastel_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="파일의 ‘디지털 지문’을 비교해 빠르게 판별해요"
+                            android:textSize="12sp"
+                            android:textColor="@color/pastel_text_secondary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_pill_mint"
+                        android:text="쉬워요"
+                        android:textColor="@color/pastel_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="11sp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@drawable/divider_dashed" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="모든 파일에는 고유한 '디지털 지문(해시)'이 있어요.\n앱은 이 지문을 추출해 대규모 악성코드 DB와 비교하고, 일치하면 악성으로 판단해요."
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/pastel_text_primary" />
+
+                <!-- 팁 박스 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:layout_marginTop="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡"
+                        android:textSize="18sp"
+                        android:layout_marginRight="6dp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="같은 파일이라면 해시가 동일! 살짝만 바뀌어도 해시가 달라져요."
+                        android:textSize="13sp"
+                        android:textColor="@color/pastel_text_primary"/>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- 섹션 2: 감염 경로 -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/card_background"
-            android:elevation="4dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp">
 
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/ghost_angry"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="12dp" />
-
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="2. 모바일 악성코드의 주요 감염 경로"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="10dp" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_gradient_mint"
+                android:padding="16dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="• 공식 스토어가 아닌 출처의 APK 설치 (가장 위험)\n• 문자 메시지(SMS)나 이메일의 악성 링크 클릭\n• 불법 파일 공유 사이트 이용"
-                android:textSize="16sp"
-                android:lineSpacingExtra="5dp" />
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="8dp">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="24dp" />
+                    <ImageView
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:src="@drawable/ghost_angry"
+                        android:background="@drawable/bg_icon_circle"
+                        android:padding="10dp" />
 
-        <LinearLayout
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2. 모바일 악성코드의 주요 감염 경로"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/pastel_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="이 세 가지만 조심해도 리스크 급감!"
+                            android:textSize="12sp"
+                            android:textColor="@color/pastel_text_secondary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_pill_pink"
+                        android:text="주의해요"
+                        android:textColor="@color/pastel_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="11sp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@drawable/divider_dashed" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="• 공식 스토어가 아닌 출처의 APK 설치 (가장 위험)\n• SMS/이메일의 의심스러운 링크 클릭\n• 불법 파일 공유/크랙 사이트 이용"
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="5dp"
+                    android:textColor="@color/pastel_text_primary" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="✅ 모르는 출처 설치 금지, 링크 클릭 전 ‘보낸 사람’부터 확인하기!"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/pastel_purple_strong"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- 섹션 3: 권한 관리 -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/card_background"
-            android:elevation="4dp">
+            android:layout_marginBottom="4dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp">
 
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/ghost_shield"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="12dp" />
-
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="3. 앱 권한 관리가 중요한 이유"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="10dp" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_card_gradient_sky"
+                android:padding="16dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="악성 앱은 불필요한 권한(예: 연락처, 위치 등)들을 요구하여 사용자 정보를 탈취합니다.\n앱 설치 시 요구하는 권한이 해당 앱의 기능과 무관하다면 주의해야 합니다."
-                android:textSize="16sp"
-                android:lineSpacingExtra="4dp" />
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:src="@drawable/ghost_shield"
+                        android:background="@drawable/bg_icon_circle"
+                        android:padding="10dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3. 앱 권한 관리가 중요한 이유"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/pastel_text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="불필요 권한 = 개인정보 유출 위험 🚨"
+                            android:textSize="12sp"
+                            android:textColor="@color/pastel_text_secondary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_pill_sky"
+                        android:text="꼭 확인"
+                        android:textColor="@color/pastel_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="11sp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@drawable/divider_dashed" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="악성 앱은 연락처/위치/알림 권한 등 과도한 권한을 요구해 정보를 탈취할 수 있어요.\n앱 기능과 무관한 권한을 요구하면 설치/업데이트를 멈추고 확인하세요."
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/pastel_text_primary" />
+
+                <!-- 체크리스트 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="10dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="◻ 알림 접근 권한은 꼭 필요한 앱에만"
+                        android:textSize="13sp"
+                        android:textColor="@color/pastel_text_primary"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="◻ 위치·연락처·저장소 권한 ‘항상 허용’은 피하기"
+                        android:textSize="13sp"
+                        android:textColor="@color/pastel_text_primary"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="◻ ‘권한 > 허용되지 않음’으로 주기적 점검"
+                        android:textSize="13sp"
+                        android:textColor="@color/pastel_text_primary"/>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 </ScrollView>

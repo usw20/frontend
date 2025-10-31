@@ -1,12 +1,16 @@
 package com.cookandroid.phantom
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewTreeObserver
@@ -17,8 +21,11 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.cookandroid.phantom.data.local.TokenDataStore
 import kotlinx.coroutines.launch
@@ -47,33 +54,34 @@ class MainPageActivity : AppCompatActivity() {
     private lateinit var tvHome: TextView
     private lateinit var tvMypage: TextView
 
-    // 상단 큰 유령 & 둥둥 애니(깜빡임 방지: pulse 제거)
+    // 상단 큰 유령 & 둥둥 애니(알파 변화 없음)
     private var ghost: ImageView? = null
     private var ghostFloatAnim: TranslateAnimation? = null
 
     // 토큰 저장소
     private lateinit var tokenStore: TokenDataStore
 
-    // --- 말풍선: 동그라미(팬텀봇 아이콘) 안 미니 풍선 ---
+    // --- 동그라미(봇 아이콘) 안 미니 말풍선 ---
     private var miniBubble: TextView? = null
     private val ui = Handler(Looper.getMainLooper())
-
-    // 반복 설정(지속 깜빡임 아님: 주기적으로 한번 나타났다 사라짐)
     private val MINI_AUTO_DISMISS_MS = 2000L
     private val MINI_GAP_MS = 1200L
     private val miniMessages = arrayOf("Hi!", "Ready", "👋")
     private var miniMsgIdx = 0
     private var miniLoopRunning = false
 
-    // (선택) 아이콘 옆 오버레이용(현재 미사용)
+    // (옵션) 아이콘 옆 오버레이 말풍선
     private var bubbleView: TextView? = null
 
-    // --- 스팸/피싱 유령 “검색 중” 애니 (깜빡임 유발 스캔/알파 스윕 제거) ---
+    // --- 스팸/피싱 유령 “검색 중” 애니 (알파 변화 없음) ---
     private var spamSearchSet: AnimatorSet? = null
 
     // --- 악성코드 카드: 빨간 느낌표 배지 ---
     private var badgeAlert: TextView? = null
 
+    // ============================================================
+    // onCreate
+    // ============================================================
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,6 +89,15 @@ class MainPageActivity : AppCompatActivity() {
 
         // TokenDataStore
         tokenStore = TokenDataStore(this)
+
+        // 1) 포그라운드 서비스 시작 (앱 설치 감시 시작)
+        startMonitoringService()
+
+        // 2) 알림 권한 요청 (API 33+)
+        requestNotificationPermission()
+
+        // 3) 알림 인텐트 처리 (앱이 알림으로 켜진 경우 포함)
+        handleNotificationIntent(intent)
 
         // findViews
         tabSecurity = findViewById(R.id.tab_security)
@@ -95,21 +112,20 @@ class MainPageActivity : AppCompatActivity() {
         tvMypage   = findViewById(R.id.tvMypage)
 
         ghost = findViewById(R.id.ghostImage)
-
-        // 악성코드 카드 배지 (레이아웃에 추가한 @id/badgeAlert)
-        badgeAlert = findViewById(R.id.badgeAlert)
+        badgeAlert = findViewById(R.id.badgeAlert) // 악성코드 카드 배지
 
         // 홈 탭 하이라이트
         highlightTab(Tab.HOME)
 
-        // 탭 이동
+        // 하단 탭 이동
         tabSecurity.setOnClickListener {
             if (currentTab() != Tab.SECURITY) {
-                startActivity(Intent(this, SecurityActivity::class.java))
+                // APK 직접 검사 시작 페이지로 이동
+                startActivity(Intent(this, ProtectionService::class.java))
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             }
         }
-        tabHome.setOnClickListener { /* 이미 홈 */ }
+        tabHome.setOnClickListener { /* 이미 홈: 필요 시 스크롤 상단 이동 등 */ }
         tabMypage.setOnClickListener {
             if (currentTab() != Tab.MYPAGE) {
                 startActivity(Intent(this, MypageActivity::class.java))
@@ -125,10 +141,11 @@ class MainPageActivity : AppCompatActivity() {
         }
 
         // ====== 가운데 카드 버튼들 ======
-        val shortcutEasy: View   = findViewById(R.id.shortcut_easy)
-        val shortcutDelete: View = findViewById(R.id.shortcut_delete)
-        val shortcutSpam: View   = findViewById(R.id.shortcut_spam)
+        val shortcutEasy: View   = findViewById(R.id.shortcut_easy)     // 악성코드
+        val shortcutDelete: View = findViewById(R.id.shortcut_delete)   // 스팸/피싱
+        val shortcutSpam: View   = findViewById(R.id.shortcut_spam)     // 팬텀 봇
 
+        // 등장 애니 (순차)
         applyEnterAnimation(shortcutEasy,   R.anim.slide_up, 100)
         applyEnterAnimation(shortcutDelete, R.anim.slide_up, 200)
         applyEnterAnimation(shortcutSpam,   R.anim.slide_up, 300)
@@ -160,7 +177,6 @@ class MainPageActivity : AppCompatActivity() {
         // ====== 스팸 유령 애니: 레이아웃 이후 세팅 & 즉시 시작 ======
         val spamIconContainer = findViewById<FrameLayout>(R.id.spamIconContainer)
         val ivSpamGhost = findViewById<ImageView>(R.id.ivSpamGhost)
-
         spamIconContainer?.viewTreeObserver?.addOnGlobalLayoutListener(object :
             ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
@@ -171,13 +187,24 @@ class MainPageActivity : AppCompatActivity() {
         })
     }
 
+    // ============================================================
+    // 알림 인텐트 재수신 (앱이 실행 중인 상태에서 알림 클릭)
+    // ============================================================
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    // ============================================================
+    // 포그라운드 & 애니 라이프사이클
+    // ============================================================
     override fun onResume() {
         super.onResume()
-        // 상단 유령: 둥둥만 (pulse 제거)
         ghost?.startAnimation(ghostFloatAnim)
         highlightTab(Tab.HOME)
 
-        // 미니 말풍선 반복 시작
+        // 미니 말풍선 루프 시작
         if (!miniLoopRunning) {
             miniLoopRunning = true
             scheduleNextMiniBubble(0L)
@@ -186,7 +213,7 @@ class MainPageActivity : AppCompatActivity() {
         // 스팸 유령 검색 애니 시작
         startSpamSearchingAnim()
 
-        // 🔴 악성코드 배지 애니 시작 (톡-하고 뜨고 살짝 맥동 반복)
+        // 배지 팝/맥동
         badgeAlert?.startAnimation(AnimationUtils.loadAnimation(this, R.anim.badge_pop_pulse))
     }
 
@@ -203,19 +230,88 @@ class MainPageActivity : AppCompatActivity() {
         stopSpamSearchingAnim()
     }
 
-    // ------------------- 네비게이션 -------------------
+    // ============================================================
+    // 권한 요청 (Android 13+ 알림)
+    // ============================================================
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    NOTIFICATION_PERMISSION_REQUEST_CODE
+                )
+            }
+        }
+    }
 
+    // ============================================================
+    // 알림 인텐트 처리: 새 설치 앱 패키지 검사 흐름
+    // ============================================================
+    private fun handleNotificationIntent(intent: Intent?) {
+        val packageToScan = intent?.getStringExtra("PACKAGE_TO_SCAN")
+        Log.d("PhantomDebug", "1. Checking Notification intent. Package: $packageToScan")
+
+        if (!packageToScan.isNullOrEmpty()) {
+            Log.d("PhantomDebug", "2. Package name received: $packageToScan. Proceeding to scan/login check.")
+            // 다음 번 실행 시 중복 스캔 방지
+            intent.removeExtra("PACKAGE_TO_SCAN")
+
+            Toast.makeText(this, "새 앱 [$packageToScan] 검사를 시작합니다.", Toast.LENGTH_LONG).show()
+
+            lifecycleScope.launch {
+                val token = tokenStore.getToken()
+                Log.d("PhantomDebug", "3. Token check completed. Token valid: ${!token.isNullOrEmpty()}")
+
+                if (token.isNullOrEmpty()) {
+                    Log.d("PhantomDebug", "4-A. Token missing, navigating to Login.")
+                    startActivity(Intent(this@MainPageActivity, LoginActivity::class.java))
+                } else {
+                    Log.d("PhantomDebug", "4-B. Token found, starting AppScanActivity with package: $packageToScan")
+                    startActivity(
+                        Intent(this@MainPageActivity, AppScanActivity::class.java).apply {
+                            putExtra("TARGET_PACKAGE_NAME", packageToScan)
+                        }
+                    )
+                }
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                Log.d("PhantomDebug", "5. MainPageActivity navigated after notification intent.")
+            }
+        }
+    }
+
+    // ============================================================
+    // 포그라운드 서비스 시작 (설치 감시)
+    // ============================================================
+    private fun startMonitoringService() {
+        val serviceIntent = Intent(this, ScanMonitorService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+    }
+
+    // ============================================================
+    // 로그인 체크 후 네비게이션 공통
+    // ============================================================
     private fun checkLoginAndNavigate(destination: Class<*>) {
         lifecycleScope.launch {
             val token = tokenStore.getToken()
-            if (token.isNullOrEmpty()) startActivity(Intent(this@MainPageActivity, LoginActivity::class.java))
-            else startActivity(Intent(this@MainPageActivity, destination))
+            if (token.isNullOrEmpty()) {
+                startActivity(Intent(this@MainPageActivity, LoginActivity::class.java))
+            } else {
+                startActivity(Intent(this@MainPageActivity, destination))
+            }
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         }
     }
 
-    // ------------------- 탭/스타일 -------------------
-
+    // ============================================================
+    // 탭 하이라이트
+    // ============================================================
     private enum class Tab { HOME, SECURITY, MYPAGE }
     private fun currentTab(): Tab = Tab.HOME
 
@@ -228,8 +324,9 @@ class MainPageActivity : AppCompatActivity() {
         }
     }
 
-    // ------------------- 애니 유틸 -------------------
-
+    // ============================================================
+    // 애니 유틸
+    // ============================================================
     private fun applyEnterAnimation(target: View, animRes: Int, startDelayMs: Long) {
         val anim = AnimationUtils.loadAnimation(this, animRes).apply { startOffset = startDelayMs }
         target.startAnimation(anim)
@@ -245,7 +342,6 @@ class MainPageActivity : AppCompatActivity() {
     }
 
     // ------------------- (A) 동그라미 안 미니 말풍선 -------------------
-
     private fun attachMiniBubbleInBotIcon() {
         val container = findViewById<FrameLayout>(R.id.botIconContainer) ?: return
         if (miniBubble != null) return
@@ -270,7 +366,7 @@ class MainPageActivity : AppCompatActivity() {
         }
         container.addView(miniBubble, lp)
 
-        // 살짝 오른쪽
+        // 살짝 오른쪽 치우치게
         miniBubble?.translationX = dp(8).toFloat()
     }
 
@@ -279,8 +375,7 @@ class MainPageActivity : AppCompatActivity() {
         tv.clearAnimation()
         tv.text = ""
         tv.alpha = 1f
-        // 팝인(Scale 중심)만 — 알파는 천천히 올라가지만 깜빡임 없음
-        tv.startAnimation(AnimationUtils.loadAnimation(this, R.anim.bubble_pop_in))
+        tv.startAnimation(AnimationUtils.loadAnimation(this, R.anim.bubble_pop_in)) // 팝인
         typewriter(tv, text, perCharDelay = 18L)
         if (autoDismissMs > 0) ui.postDelayed({ hideMiniBubbleInBotIcon() }, autoDismissMs)
     }
@@ -288,7 +383,6 @@ class MainPageActivity : AppCompatActivity() {
     private fun hideMiniBubbleInBotIcon() {
         val tv = miniBubble ?: return
         tv.clearAnimation()
-        // 부드럽게 사라짐(짧은 페이드) — 지속 깜빡임 없음
         val fade = AnimationUtils.loadAnimation(this, android.R.anim.fade_out).apply { duration = 160 }
         tv.startAnimation(fade)
         ui.postDelayed({
@@ -310,12 +404,10 @@ class MainPageActivity : AppCompatActivity() {
         }, delay)
     }
 
-    // ------------------- (B) 스팸/피싱 유령 “검색 중” 애니 (알파 변화 없음) -------------------
-
+    // ------------------- (B) 스팸/피싱 유령 “검색 중” 애니 -------------------
     private fun setupSpamSearchingAnim(container: FrameLayout?, ghost: ImageView?) {
         container ?: return; ghost ?: return
 
-        // 중복 생성 방지 & 성능
         spamSearchSet?.cancel()
         ghost.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
@@ -372,8 +464,7 @@ class MainPageActivity : AppCompatActivity() {
         spamSearchSet?.cancel()
     }
 
-    // ------------------- (옵션) 아이콘 '옆' 오버레이 말풍선 예시 -------------------
-
+    // ------------------- (옵션) 아이콘 '옆' 말풍선 -------------------
     private fun attachBubbleNextToBotIcon() {
         val root = findViewById<ConstraintLayout>(R.id.main_page)
         val botIcon = findViewById<ImageView>(R.id.ivBotGhost) ?: return
@@ -429,7 +520,6 @@ class MainPageActivity : AppCompatActivity() {
     }
 
     // ------------------- 공통 유틸 -------------------
-
     private fun typewriter(tv: TextView, fullText: String, perCharDelay: Long) {
         tv.text = ""
         var i = 0
@@ -445,4 +535,8 @@ class MainPageActivity : AppCompatActivity() {
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+    companion object {
+        private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
+    }
 }

@@ -7,50 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".ScanResultActivity">
 
-    <!-- 상단 바 -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/topBar"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="12dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="뒤로가기"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_back"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="보안 검사 결과"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:paddingEnd="16dp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            app:layout_constrainedWidth="true"
-            app:layout_constraintStart_toEndOf="@id/btnBack"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- 요약 영역 -->
     <LinearLayout
         android:id="@+id/summaryContainer"
         android:layout_width="0dp"
@@ -58,15 +25,14 @@
         android:orientation="vertical"
         android:padding="20dp"
         android:background="#F0F0F0"
-        app:layout_constraintTop_toBottomOf="@id/topBar"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="보안 검사 결과 요약"
-            android:textSize="18sp"
+            android:text="보안 검사 결과"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:textColor="#660099"
             android:layout_marginBottom="8dp" />
@@ -75,7 +41,7 @@
             android:id="@+id/tvScanSummary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#000000"
             android:layout_marginBottom="4dp"
@@ -85,12 +51,12 @@
             android:id="@+id/tvDangerousCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textColor="#FF4081"
             tools:text="1개 앱에서 위험 요소가 발견되었습니다." />
+
     </LinearLayout>
 
-    <!-- 결과 리스트 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvScanResults"
         android:layout_width="0dp"
@@ -102,7 +68,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_scan_result" />
 
-    <!-- 해결 버튼 -->
     <Button
         android:id="@+id/btnResolveAction"
         android:layout_width="0dp"
@@ -112,9 +77,9 @@
         android:textStyle="bold"
         android:padding="15dp"
         android:layout_margin="16dp"
-        android:backgroundTint="#660099"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:backgroundTint="#660099" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
