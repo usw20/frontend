@@ -120,8 +120,7 @@ class MainPageActivity : AppCompatActivity() {
         // 하단 탭 이동
         tabSecurity.setOnClickListener {
             if (currentTab() != Tab.SECURITY) {
-                // APK 직접 검사 시작 페이지로 이동
-                startActivity(Intent(this, ProtectionService::class.java))
+                startActivity(Intent(this, SecurityActivity::class.java))
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             }
         }

@@ -1,0 +1,4 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <size android:width="48dp" android:height="12dp"/>
+    <solid android:color="#33FFFFFF"/> <!-- 반투명 흰색으로 drop shadow 느낌 -->
+</shape>

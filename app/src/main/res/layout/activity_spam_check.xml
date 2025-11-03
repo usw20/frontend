@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/spam_check_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -40,13 +41,12 @@
             android:textSize="18sp"/>
     </FrameLayout>
 
-    <!-- 🔔 실시간 스팸/피싱 알림 스위치 (간단 버전) -->
-    <LinearLayout
+    <!-- 🔔 실시간 스팸/피싱 알림 스위치 (귀신 토글 포함) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/alertsRow"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:minHeight="84dp"
         android:paddingStart="20dp"
         android:paddingEnd="16dp"
         android:paddingTop="10dp"
@@ -55,21 +55,70 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- 왼쪽 타이틀: 오른쪽 라벨과 baseline 정렬 -->
         <TextView
             android:id="@+id/tvAlertsTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:text="실시간 스팸/피싱 알림"
             android:textStyle="bold"
             android:textColor="#000000"
-            android:textSize="15sp"/>
+            android:textSize="15sp"
+            android:labelFor="@id/ghostSwitch"
+            android:gravity="center_vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/switchBox"
+            app:layout_constraintTop_toTopOf="@id/switchBox"
+            app:layout_constraintBottom_toBottomOf="@id/switchBox" />
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switchAlerts"
+        <!-- 오른쪽 묶음: 라벨/상태 + Boo + 스위치 -->
+        <LinearLayout
+            android:id="@+id/switchBox"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <!-- 상단 라벨 + 상태 -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvSwitchLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="알림 스위치"
+                    android:textColor="#6A6A6A"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/tvSwitchState"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  (꺼짐)"
+                    android:textColor="#9A9AA1"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- 커스텀 귀신 스위치 -->
+            <com.cookandroid.phantom.GhostSwitchView
+                android:id="@+id/ghostSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:clickable="true"
+                android:contentDescription="실시간 스팸/피싱 알림 켜기/끄기 스위치"
+                android:focusable="true"
+                tools:ignore="MissingClass" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 설명 -->
     <TextView
