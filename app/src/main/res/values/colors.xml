@@ -9,4 +9,10 @@
     <color name="mint_100">#E9FFF4</color>
     <color name="pink_100">#FFF0FA</color>
     <color name="sky_100">#EFF8FF</color>
+    <color name="phantom_primary">#660099</color>  <!-- 팬텀 보라 -->
+    <color name="black">#000000</color>            <!-- 기본 블랙 -->
+
+    <!-- 카드 내부 밝은 보라/블루 텍스트 톤 -->
+    <color name="phantom_purple_light_text">#F0E6FF</color>
+    <color name="phantom_blue_light_text">#E6F0FF</color>
 </resources>
