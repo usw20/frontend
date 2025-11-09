@@ -1,9 +1,13 @@
 package com.cookandroid.phantom
 
 import android.os.Bundle
+import android.view.animation.TranslateAnimation
+import android.view.animation.ScaleAnimation
+import android.view.animation.AnimationSet
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,7 +16,6 @@ import com.cookandroid.phantom.R
 import com.cookandroid.phantom.chat.ChatAdapter
 import com.cookandroid.phantom.chat.ChatMessage
 import com.cookandroid.phantom.chat.Sender
-// ✅ DTO는 AuthOneFileActivity.kt에 있는 것을 사용해야 함 (패키지 com.cookandroid.phantom)
 import com.cookandroid.phantom.ChatbotMessageRequest
 import com.cookandroid.phantom.ChatbotMessageResponse
 import kotlinx.coroutines.Dispatchers
@@ -23,8 +26,6 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-// ⚠️ ChatbotApi는 AuthOneFileActivity.kt 안에 이미 선언되어 있으므로 재선언하지 않습니다.
-
 class BotActivity : AppCompatActivity() {
 
     private lateinit var rv: RecyclerView
@@ -32,35 +33,76 @@ class BotActivity : AppCompatActivity() {
     private lateinit var btn: ImageButton
     private lateinit var btnBack: ImageButton
     private lateinit var adapter: ChatAdapter
-
-    // 백엔드 호출용
     private lateinit var chatbotApi: ChatbotApi
+
+    private var ivGhost: ImageView? = null
     private var conversationId: String? = null
+
+    // 👻 애니메이션들
+    private lateinit var ghostFloatAnim: TranslateAnimation
+    private lateinit var ghostTalkAnim: AnimationSet
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bot)
 
-        // 뒤로가기
         btnBack = findViewById(R.id.btnBack)
         btnBack.setOnClickListener { finish() }
 
-        // Retrofit(API) 준비 (ChatbotApi는 다른 파일에 이미 선언되어 있음)
         chatbotApi = buildChatbotRetrofit(this)
 
-        rv  = findViewById(R.id.rvChat)
-        et  = findViewById(R.id.etMessage)
+        rv = findViewById(R.id.rvChat)
+        et = findViewById(R.id.etMessage)
         btn = findViewById(R.id.btnSend)
+        ivGhost = findViewById(R.id.ivBotAvatarOverlay)
+
+        // ✅ 기본 떠다니는 애니메이션
+        ghostFloatAnim = TranslateAnimation(0f, 0f, 0f, 30f).apply {
+            duration = 1000L
+            repeatCount = TranslateAnimation.INFINITE
+            repeatMode = TranslateAnimation.REVERSE
+        }
+
+        // ✅ 말하는 애니메이션 (튕기는 효과)
+        ghostTalkAnim = AnimationSet(true).apply {
+            // 위아래로 빠르게 튕기기
+            val bounce = TranslateAnimation(0f, 0f, 0f, -15f).apply {
+                duration = 200L
+                repeatCount = 5
+                repeatMode = TranslateAnimation.REVERSE
+            }
+            // 살짝 커졌다 작아지기
+            val scale = ScaleAnimation(
+                1f, 1.1f, 1f, 1.1f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f
+            ).apply {
+                duration = 200L
+                repeatCount = 5
+                repeatMode = ScaleAnimation.REVERSE
+            }
+            addAnimation(bounce)
+            addAnimation(scale)
+
+            // 애니메이션 끝나면 다시 떠다니기
+            setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                override fun onAnimationStart(animation: android.view.animation.Animation?) {}
+                override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
+                override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+                    ivGhost?.startAnimation(ghostFloatAnim)
+                }
+            })
+        }
+
+        ivGhost?.startAnimation(ghostFloatAnim)
 
         adapter = ChatAdapter(mutableListOf())
         rv.adapter = adapter
         rv.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
 
-        // 엔터 전송
         et.imeOptions = EditorInfo.IME_ACTION_SEND
         et.setSingleLine(true)
 
-        // 시작 멘트
         adapter.add(
             ChatMessage(
                 "안녕하세요! 팬텀 봇입니다. 스팸/피싱 의심 내용이나 보안 질문을 보내주세요.",
@@ -68,6 +110,8 @@ class BotActivity : AppCompatActivity() {
             )
         )
         scrollToBottom()
+        // 시작 메시지 보낼 때 말하는 애니메이션
+        playTalkAnimation()
 
         btn.setOnClickListener { sendMessage() }
         et.setOnEditorActionListener { _, actionId, _ ->
@@ -77,20 +121,33 @@ class BotActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        ivGhost?.startAnimation(ghostFloatAnim)
+    }
+
+    override fun onPause() {
+        ivGhost?.clearAnimation()
+        super.onPause()
+    }
+
+    // 👻 봇이 말할 때 애니메이션 재생
+    private fun playTalkAnimation() {
+        ivGhost?.clearAnimation()
+        ivGhost?.startAnimation(ghostTalkAnim)
+    }
+
     private fun sendMessage() {
         val text = et.text.toString().trim()
         if (text.isEmpty()) return
 
-        // 1) 유저 메시지 표시
         adapter.add(ChatMessage(text, Sender.USER))
         et.setText("")
         scrollToBottom()
 
-        // 2) 타이핑 표시
         adapter.add(ChatMessage("", Sender.TYPING))
         scrollToBottom()
 
-        // 3) 서버 호출
         lifecycleScope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) {
@@ -103,15 +160,15 @@ class BotActivity : AppCompatActivity() {
                 }
             }
 
-            // 타이핑 제거
             adapter.removeLastIfTyping()
 
             result.onSuccess { res ->
                 if (res.isSuccessful && res.body() != null) {
                     val body: ChatbotMessageResponse = res.body()!!
-                    // ✅ AuthOneFileActivity의 DTO에 맞춰 reply 사용 (오타 repl 금지)
                     conversationId = body.conversationId
                     adapter.add(ChatMessage(body.reply, Sender.BOT))
+                    // ✅ 봇이 답장할 때 말하는 애니메이션!
+                    playTalkAnimation()
                 } else {
                     val errText = res.errorBody()?.string()
                     adapter.add(
@@ -120,6 +177,7 @@ class BotActivity : AppCompatActivity() {
                             Sender.BOT
                         )
                     )
+                    playTalkAnimation()
                 }
                 scrollToBottom()
             }.onFailure { e ->
@@ -129,6 +187,7 @@ class BotActivity : AppCompatActivity() {
                         Sender.BOT
                     )
                 )
+                playTalkAnimation()
                 scrollToBottom()
             }
         }
@@ -140,10 +199,8 @@ class BotActivity : AppCompatActivity() {
 }
 
 /* =======================
-   같은 파일 내 유틸 (중복 선언/중복 타입 금지)
+   Retrofit + Token 유틸
    ======================= */
-
-// 토큰 부착 + Retrofit 빌더
 private const val PREFS = "phantom_prefs"
 private const val KEY_TOKEN = "jwt_token"
 
@@ -156,7 +213,7 @@ private fun buildChatbotRetrofit(ctx: android.content.Context): ChatbotApi {
         val token = getToken(ctx)
         val req = if (!token.isNullOrBlank()) {
             chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer $token") // AuthOneFileActivity와 동일 포맷
+                .addHeader("Authorization", "Bearer $token")
                 .build()
         } else chain.request()
         chain.proceed(req)
@@ -167,7 +224,7 @@ private fun buildChatbotRetrofit(ctx: android.content.Context): ChatbotApi {
         .build()
 
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/") // 로컬 스프링 서버(에뮬레이터). 배포 시 https://도메인/ 로 교체
+        .baseUrl("http://10.0.2.2:8080/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
