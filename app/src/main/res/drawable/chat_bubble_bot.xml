@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#F2E9FF"/>
+    <corners android:radius="16dp"/>
+    <!-- 선택: 테두리로 경계 또렷 -->
+    <stroke android:width="1dp" android:color="#E6DAFA"/>
+    <padding android:left="12dp" android:top="10dp" android:right="12dp" android:bottom="10dp"/>
+</shape>
