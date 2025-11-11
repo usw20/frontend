@@ -76,9 +76,13 @@ class AppScanActivity : AppCompatActivity() {
         // 4. 알림 인텐트 처리 로직
         val targetPackageName = intent.getStringExtra("TARGET_PACKAGE_NAME")
 
+        Log.d("AppScanActivity", "TARGET_PACKAGE_NAME: $targetPackageName")
+
         if (targetPackageName != null) {
+            Log.d("AppScanActivity", "타겟 앱 검사 시작: $targetPackageName")
             startTargetedScan(targetPackageName)
         } else {
+            Log.d("AppScanActivity", "전체 앱 목록 로드")
             startFullScan()
         }
 

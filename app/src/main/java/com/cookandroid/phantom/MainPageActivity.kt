@@ -87,6 +87,9 @@ class MainPageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_page)
 
+        // ✅ RetrofitClient 초기화 (JWT 토큰 자동 추가)
+        com.cookandroid.phantom.data.api.RetrofitClient.initialize(this)
+
         // TokenDataStore
         tokenStore = TokenDataStore(this)
 

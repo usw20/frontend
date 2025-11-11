@@ -88,10 +88,10 @@ class AppDetailActivity : AppCompatActivity() {
 
         // 결과에 따른 UI 스타일 변경
         if (result.isMalicious) {
-            tvStatus.text = "❌ 위험 요소 감지 (${result.threatType})"
+            tvStatus.text = "❌ 위험 요소 감지 (${result.threatType ?: "Unknown"})"
             tvStatus.setTextColor(Color.RED)
             llBackground.setBackgroundColor(Color.parseColor("#FFEEEE")) // 연한 붉은색 배경
-        } else if (result.threatType.contains("Error") || result.threatType.contains("Timeout")) {
+        } else if (result.threatType?.contains("Error") == true || result.threatType?.contains("Timeout") == true) {
             tvStatus.text = "⚠️ 검사 오류 (${result.threatType})"
             tvStatus.setTextColor(Color.GRAY)
             llBackground.setBackgroundColor(Color.parseColor("#EEEEEE")) // 회색 배경

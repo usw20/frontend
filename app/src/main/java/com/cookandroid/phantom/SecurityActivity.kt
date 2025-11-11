@@ -227,7 +227,13 @@ class SecurityActivity : AppCompatActivity() {
         private val tvTitle: TextView = v.findViewById(R.id.tvTitle)
         private val tvSub: TextView = v.findViewById(R.id.tvSub)
         fun bind(item: SecurityActivity.UnifiedLog) {
-            iv.setImageResource(if (item.type == "malware") R.drawable.shield else R.drawable.mypage)
+            // ✅ 존재하는 drawable만 사용
+            iv.setImageResource(
+                if (item.type == "malware")
+                    android.R.drawable.ic_dialog_alert // 악성코드 아이콘
+                else
+                    android.R.drawable.ic_dialog_info  // 피싱 아이콘
+            )
             tvTitle.text = if (item.type == "malware")
                 "악성코드: ${item.result.uppercase()}"
             else

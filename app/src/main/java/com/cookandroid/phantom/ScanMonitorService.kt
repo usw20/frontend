@@ -5,169 +5,275 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.cookandroid.phantom.util.PackageInstallationReceiver
 
 class ScanMonitorService : Service() {
 
-    private val SERVICE_NOTIFICATION_ID = 1
-    private val CHANNEL_ID_SERVICE = "PhantomMonitorChannel"
-    private val CHANNEL_ID_ALERT = "ScanAlertChannel"
+    companion object {
+        private const val TAG = "ScanMonitorService"
+        private const val SERVICE_NOTIFICATION_ID = 1
+        private const val CHANNEL_ID_SERVICE = "PhantomMonitorChannel"
+        private const val CHANNEL_ID_NEW_APP = "PhantomNewAppChannel"
+        private const val POLLING_INTERVAL = 3000L // 3초마다 확인
+    }
 
     private lateinit var packageReceiver: PackageInstallationReceiver
+    private val handler = Handler(Looper.getMainLooper())
+    private var previousPackages = setOf<String>()
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "📱 ScanMonitorService onCreate 호출됨")
 
-        // 1. 포그라운드 서비스 알림 채널 생성 및 서비스 시작
-        createServiceNotificationChannel()
+        // 1. 알림 채널 미리 생성
+        initNotificationChannels()
+
+        // 2. 포그라운드 서비스 시작
         val notification = createServiceNotification()
         startForeground(SERVICE_NOTIFICATION_ID, notification)
 
-        // 2. 앱 설치 이벤트를 받을 리시버 등록
+        // 3. 브로드캐스트 리시버 등록
         registerPackageReceiver()
 
-        Log.d("MonitorService", "ScanMonitorService started and receiver registered.")
+        // 4. 폴링 시작
+        startPackagePolling()
+
+        Log.d(TAG, "✅ ScanMonitorService started successfully")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // 서비스가 강제 종료돼도 시스템이 가능한 경우 다시 시작하도록 요청
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // 서비스 종료 시 리시버 등록 해제
-        unregisterReceiver(packageReceiver)
-        Log.d("MonitorService", "ScanMonitorService destroyed and receiver unregistered.")
+        Log.d(TAG, "🛑 ScanMonitorService onDestroy 호출됨")
+
+        try {
+            unregisterReceiver(packageReceiver)
+        } catch (e: Exception) {
+            Log.e(TAG, "리시버 등록 해제 오류: ${e.message}")
+        }
+
+        handler.removeCallbacksAndMessages(null)
+        previousPackages = emptySet()
+
+        Log.d(TAG, "✅ ScanMonitorService destroyed")
     }
 
-    override fun onBind(intent: Intent): IBinder? {
-        return null // 이 서비스는 바인딩되지 않습니다.
-    }
+    override fun onBind(intent: Intent): IBinder? = null
 
     /**
-     * 포그라운드 서비스의 영구 알림 채널을 생성합니다.
+     * Android 8+ 알림 채널을 미리 생성합니다.
+     * - 채널을 미리 생성하면 알림 표시 시 성능 향상
+     * - 리소스 ID 오류 방지
      */
-    private fun createServiceNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
-                CHANNEL_ID_SERVICE,
-                "Phantom 백그라운드 모니터링",
-                NotificationManager.IMPORTANCE_DEFAULT // 낮은 중요도로 설정하여 방해를 최소화
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
+    private fun initNotificationChannels() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+
+        // 1️⃣ 포그라운드 서비스 채널 (낮은 우선순위)
+        val serviceChannel = NotificationChannel(
+            CHANNEL_ID_SERVICE,
+            "🛡️ Phantom 백그라운드 모니터링",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "앱 설치 감시 중"
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
+        }
+
+        // 2️⃣ 새로운 앱 감지 채널 (높은 우선순위)
+        val newAppChannel = NotificationChannel(
+            CHANNEL_ID_NEW_APP,
+            "🚨 보안 경고",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "새로운 앱 설치 감지 시 경고"
+            enableLights(true)
+            lightColor = Color.RED
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 500, 250, 500)
+            setShowBadge(true)
+        }
+
+        notificationManager?.apply {
+            createNotificationChannel(serviceChannel)
+            createNotificationChannel(newAppChannel)
+            Log.d(TAG, "✅ 알림 채널 2개 생성 완료")
         }
     }
 
     /**
-     * 포그라운드 서비스 시작 시 사용할 알림 객체를 생성합니다.
+     * 포그라운드 서비스용 알림을 생성합니다.
+     * 사용자가 제거할 수 없는 고정 알림입니다.
      */
     private fun createServiceNotification(): Notification {
-        // 알림 클릭 시 메인 페이지로 이동하도록 설정
-        val notificationIntent = Intent(this, MainPageActivity::class.java)
-        // 포그라운드 알림은 인텐트 데이터가 필요 없으므로 기존 FLAG_IMMUTABLE 유지
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+        val intent = Intent(this, MainPageActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
 
-        // NotificationCompat.Builder를 사용하여 알림 생성
         return NotificationCompat.Builder(this, CHANNEL_ID_SERVICE)
-            .setContentTitle("Phantom 보안 감시 중")
-            .setContentText("앱 설치 상태를 실시간으로 감시하고 있습니다.")
-            // ⚠️ R.drawable.ic_stat_name 대신 프로젝트에 존재하는 작은 아이콘 리소스 ID를 사용해야 합니다.
-            .setSmallIcon(R.drawable.ghost_angry)
+            .setSmallIcon(R.drawable.ic_notification_ghost) // 👻 유령 아이콘
+            .setContentTitle("🛡️ Phantom 보안 감시 중")
+            .setContentText("앱 설치를 실시간으로 감시하고 있습니다.")
             .setContentIntent(pendingIntent)
+            .setOngoing(true) // 사용자가 스와이프로 제거 불가
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 
     /**
-     * ACTION_PACKAGE_ADDED 이벤트를 수신할 리시버를 등록합니다.
+     * 브로드캐스트 리시버를 등록합니다.
+     * ACTION_PACKAGE_ADDED 이벤트를 감지합니다.
      */
     private fun registerPackageReceiver() {
-        packageReceiver = PackageInstallationReceiver()
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_PACKAGE_ADDED) // 앱 설치 시 이벤트
-            // 반드시 'package' 스키마를 추가해야 패키지 이벤트 수신 가능
-            addDataScheme("package")
+        try {
+            packageReceiver = PackageInstallationReceiver()
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addDataScheme("package")
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(packageReceiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                registerReceiver(packageReceiver, filter)
+            }
+
+            Log.d(TAG, "✅ 브로드캐스트 리시버 등록 완료")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 리시버 등록 실패: ${e.message}")
         }
-        // NOTE: Android 8.0 (API 26) 이상부터는 암시적 브로드캐스트 리시버는 Context.registerReceiver()로만 등록 가능합니다.
-        registerReceiver(packageReceiver, filter)
     }
 
     /**
-     * 새 앱 설치 이벤트를 처리하는 BroadcastReceiver 내부 클래스입니다.
+     * 3초마다 설치된 앱 목록을 확인하여 새로운 앱을 감지합니다.
+     * (브로드캐스트 리시버 백업 역할)
      */
-    inner class PackageInstallationReceiver : BroadcastReceiver() {
+    private fun startPackagePolling() {
+        Log.d(TAG, "📊 폴링 시작")
+        previousPackages = getCurrentInstalledPackages()
 
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_PACKAGE_ADDED) {
-                // 설치된 앱의 패키지 이름 가져오기
-                val packageName = intent.data?.schemeSpecificPart
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                try {
+                    val currentPackages = getCurrentInstalledPackages()
+                    val newPackages = currentPackages - previousPackages
 
-                // 우리 앱 자신이 설치된 경우(업데이트 등)와 시스템 패키지 이벤트 처리 방지
-                if (packageName != null && packageName != context.packageName) {
-                    Log.i("MonitorService", "New app installed: $packageName - Showing scan alert.")
-                    showScanNotification(context, packageName)
+                    if (newPackages.isNotEmpty()) {
+                        Log.d(TAG, "📱 새로운 앱 감지: $newPackages")
+                        newPackages.forEach { packageName ->
+                            if (packageName != this@ScanMonitorService.packageName) {
+                                showNewAppNotification(packageName)
+                            }
+                        }
+                    }
+
+                    previousPackages = currentPackages
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ 폴링 중 오류: ${e.message}")
                 }
+
+                handler.postDelayed(this, POLLING_INTERVAL)
             }
+        }, POLLING_INTERVAL)
+    }
+
+    /**
+     * 현재 설치된 모든 사용자 앱의 패키지명 집합을 반환합니다.
+     * (시스템 앱 제외)
+     */
+    private fun getCurrentInstalledPackages(): Set<String> {
+        return try {
+            packageManager.getInstalledApplications(0)
+                .filter { (it.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) == 0 }
+                .map { it.packageName }
+                .toSet()
+        } catch (e: Exception) {
+            Log.e(TAG, "설치된 앱 목록 조회 실패: ${e.message}")
+            emptySet()
+        }
+    }
+
+    /**
+     * 새로운 앱 설치 감지 알림을 표시합니다.
+     * 클릭 시 해당 앱을 자동으로 검사합니다.
+     */
+    private fun showNewAppNotification(packageName: String) {
+        if (packageName == this.packageName) {
+            Log.d(TAG, "⏭️ Phantom 앱 자신이므로 무시")
+            return
         }
 
-        private fun showScanNotification(context: Context, packageName: String) {
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            // 각 패키지별로 고유한 ID를 사용해야 알림이 덮어쓰이지 않습니다.
-            val NOTIFICATION_ID = packageName.hashCode()
-
-            // ⭐️ 알림 ID를 PendingIntent의 요청 코드(requestCode)로도 사용합니다.
-            val REQUEST_CODE = NOTIFICATION_ID
-
-            // Android 8.0 (Oreo) 이상에서 알림 채널 생성 (경고 채널)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID_ALERT,
-                    "검사 필요 알림",
-                    NotificationManager.IMPORTANCE_HIGH // 높은 중요도로 설정하여 사용자에게 눈에 띄게 함
-                )
-                notificationManager.createNotificationChannel(channel)
+        try {
+            // 앱 이름 조회
+            val appName = try {
+                packageManager.getApplicationLabel(
+                    packageManager.getApplicationInfo(packageName, 0)
+                ).toString()
+            } catch (e: Exception) {
+                Log.w(TAG, "앱 이름 조회 실패: $packageName")
+                packageName
             }
 
-            val scanIntent = Intent(context, MainPageActivity::class.java).apply {
-                putExtra("PACKAGE_TO_SCAN", packageName)
+            Log.d(TAG, "🔔 알림 표시: $appName ($packageName)")
 
-                // 🚨 수정: NEW_TASK와 CLEAR_TOP을 함께 사용해 Activity를 재사용하도록 강력하게 지시
+            // 클릭 시 AppScanActivity로 이동
+            val scanIntent = Intent(this, AppScanActivity::class.java).apply {
+                putExtra("TARGET_PACKAGE_NAME", packageName)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
 
-            val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_CANCEL_CURRENT
-            }
-
-            // ⭐️ requestCode에 고유한 ID(REQUEST_CODE)를 사용합니다.
+            val notificationId = packageName.hashCode()
             val pendingIntent = PendingIntent.getActivity(
-                context,
-                REQUEST_CODE, // 🚨 수정: 알림마다 고유한 REQUEST_CODE 사용
+                this,
+                notificationId,
                 scanIntent,
-                flag // 🚨 수정: FLAG_CANCEL_CURRENT 사용
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
             // 알림 빌드
-            val notification = NotificationCompat.Builder(context, CHANNEL_ID_ALERT)
-                .setContentTitle("🚨 새로운 앱 설치 감지!")
-                .setContentText("새로 설치된 앱 ($packageName)의 보안 검사가 필요합니다. 클릭하여 검사하세요.")
-                .setSmallIcon(R.drawable.ghost_angry) // ⚠️ 적절한 아이콘으로 변경
-                .setAutoCancel(true)
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID_NEW_APP)
+                .setSmallIcon(R.drawable.ic_notification_ghost) // 👻 유령 아이콘
+                .setContentTitle("🛡️ 새로운 앱 설치 감지")
+                .setContentText("'$appName'이 설치되었습니다")
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("앱 '$appName'의 악성코드 검사를 시작하시겠어요?")
+                )
                 .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .build()
 
-            notificationManager.notify(NOTIFICATION_ID, notification)
+            // 알림 표시
+            NotificationManagerCompat.from(this).notify(notificationId, notification)
+            Log.d(TAG, "✅ 알림 표시 완료")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ 알림 표시 중 오류: ${e.message}", e)
         }
     }
 }
+

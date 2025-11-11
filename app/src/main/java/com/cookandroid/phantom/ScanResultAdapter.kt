@@ -49,10 +49,10 @@ class ScanResultAdapter(
             val confidencePercent = String.format("%.1f%%", result.confidence * 100)
 
             // 오류 및 악성 상태 표시 로직
-            if (result.threatType.contains("Error") ||
-                result.threatType.contains("Timeout") ||
-                result.threatType.contains("Unknown Host") ||
-                result.threatType.contains("Connection Error")) {
+            if (result.threatType?.contains("Error") == true ||
+                result.threatType?.contains("Timeout") == true ||
+                result.threatType?.contains("Unknown Host") == true ||
+                result.threatType?.contains("Connection Error") == true) {
 
                 // 🚨 검사 오류 상태: 회색 경고
                 tvThreatType.text = "검사 오류: ${result.threatType}"
@@ -62,7 +62,7 @@ class ScanResultAdapter(
             }
             else if (result.isMalicious) {
                 // ⚠️ 악성코드: 빨간색
-                tvThreatType.text = "위험 요소 감지 (${result.threatType})"
+                tvThreatType.text = "위험 요소 감지 (${result.threatType ?: "Unknown"})"
                 tvThreatType.setTextColor(Color.RED)
                 tvConfidence.setTextColor(Color.RED)
                 tvConfidence.text = "의심도: ${confidencePercent}"

@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +19,6 @@ class ScanResultActivity : AppCompatActivity() {
     private lateinit var tvScanSummary: TextView
     private lateinit var tvDangerousCount: TextView
     private lateinit var btnResolve: Button
-    private lateinit var btnBack: ImageButton
 
     // 결과 리스트는 갱신 가능하게 var로
     private var finalResults: List<ScanResult> = emptyList()
@@ -35,10 +33,12 @@ class ScanResultActivity : AppCompatActivity() {
         tvDangerousCount = findViewById(R.id.tvDangerousCount)
         recyclerView = findViewById(R.id.rvScanResults)
         btnResolve = findViewById(R.id.btnResolveAction)
-        btnBack = findViewById(R.id.btnBack)  // activity_scan_result.xml 의 상단 바에 존재해야 함
 
-        // 뒤로가기(상단 버튼)
-        btnBack.setOnClickListener { navigateBackToAppScan() }
+        // Toolbar 설정 (뒤로가기 버튼)
+        val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
 
         // 뒤로가기(물리/제스처)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -74,6 +74,12 @@ class ScanResultActivity : AppCompatActivity() {
                 navigateBackToAppScan()
             }
         }
+    }
+
+    // Toolbar 뒤로가기 처리
+    override fun onSupportNavigateUp(): Boolean {
+        navigateBackToAppScan()
+        return true
     }
 
     override fun onResume() {
@@ -114,10 +120,10 @@ class ScanResultActivity : AppCompatActivity() {
 
     private fun calculateErrorCount(results: List<ScanResult>): Int =
         results.count {
-            it.threatType.contains("Error") ||
-                    it.threatType.contains("Timeout") ||
-                    it.threatType.contains("Unknown Host") ||
-                    it.threatType.contains("Connection Error")
+            it.threatType?.contains("Error") == true ||
+                    it.threatType?.contains("Timeout") == true ||
+                    it.threatType?.contains("Unknown Host") == true ||
+                    it.threatType?.contains("Connection Error") == true
         }
 
     /** 상단 요약 갱신 */

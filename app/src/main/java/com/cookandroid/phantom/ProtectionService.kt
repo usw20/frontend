@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
 import okhttp3.Interceptor
@@ -229,8 +230,15 @@ class ProtectionService : Service() {
         )
         val status = if (active) "감시 중" else "중지됨"
         val content = "스팸/피싱 $spam · 악성코드 $malware ($status)"
+
+        // Ensure small icon is always valid (non-zero)
+        val smallIcon = android.R.drawable.ic_dialog_info
+        try {
+            Log.d("ProtectionService", "Building notification with smallIcon=$smallIcon, content=$content")
+        } catch (_: Exception) {}
+
         return NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.shield)
+            .setSmallIcon(R.drawable.ic_notification_ghost) // 👻 유령 아이콘
             .setContentTitle("Phantom 보호")
             .setContentText(content)
             .setContentIntent(pending)

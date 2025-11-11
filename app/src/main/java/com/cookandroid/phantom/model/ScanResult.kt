@@ -8,5 +8,7 @@ data class ScanResult(
     val appInfo: AppInfo,          // AppInfo가 Parcelable이므로 포함 가능
     val isMalicious: Boolean,
     val confidence: Double = 0.0,
-    val threatType: String = "Benign"
+    val threatType: String? = null,
+    val riskLevel: String = "UNKNOWN",
+    val shouldBlock: Boolean = false
 ) : Parcelable

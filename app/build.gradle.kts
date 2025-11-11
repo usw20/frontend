@@ -34,6 +34,16 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    // ✅ 메모리 최적화 설정 (Pinning deprecated 경고 제거)
+    packagingOptions {
+        resources {
+            excludes += listOf(
+                "META-INF/native-image/**",
+                "META-INF/proguard/**"
+            )
+        }
+    }
 }
 
 dependencies {
