@@ -1,20 +1,26 @@
 package com.cookandroid.phantom
 
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
-import android.widget.*
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import okhttp3.OkHttpClient
-import okhttp3.Interceptor
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -26,23 +32,36 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var confirmPwEt: EditText
     private lateinit var phoneEt: EditText
     private lateinit var btn: Button
+    private lateinit var backBtn: ImageButton
+    private lateinit var ghostIv: ImageView
+
+    // 유령 좌우 이동 애니메이터
+    private var ghostLRAnimator: ObjectAnimator? = null
+    // (선택) 살짝 떠 있는 느낌을 위한 상하 보브 애니메이터 — 필요 없으면 주석 처리해도 됨
+    private var ghostBobAnimator: ObjectAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_signup)
 
-        // Retrofit 초기화
         setupRetrofit()
 
         // View 초기화
+        backBtn = findViewById(R.id.back_button)
         emailEt = findViewById(R.id.signupEmail)
         pwEt = findViewById(R.id.signupPassword)
         confirmPwEt = findViewById(R.id.signupConfirmPassword)
         phoneEt = findViewById(R.id.signupPhone)
         btn = findViewById(R.id.signupBtn)
+        ghostIv = findViewById(R.id.signupGhost)
 
+        // 🔙 뒤로가기 → 로그인
+        backBtn.setOnClickListener {
+            goToLogin(prefillEmail = emailEt.text.toString().trim())
+        }
+
+        // 가입 버튼
         btn.setOnClickListener {
-            // 간단 검증
             emailEt.error = null
             pwEt.error = null
             confirmPwEt.error = null
@@ -91,12 +110,23 @@ class SignUpActivity : AppCompatActivity() {
 
             signUp(email, pw, phone)
         }
+
+        // 👻 유령 좌우 이동 애니메이션 시작
+        startGhostAnimation()
+    }
+
+    private fun goToLogin(prefillEmail: String?) {
+        val intent = Intent(this, LoginActivity::class.java).apply {
+            putExtra("prefill_email", prefillEmail ?: "")
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun setupRetrofit() {
         val authInterceptor = Interceptor { chain ->
             val originalRequest = chain.request()
-            // 회원가입에서는 토큰이 필요없으므로 그대로 진행
             chain.proceed(originalRequest)
         }
 
@@ -105,7 +135,7 @@ class SignUpActivity : AppCompatActivity() {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/") // 서버 주소 - 에뮬레이터용
+            .baseUrl("http://10.0.2.2:8080/") // 에뮬레이터용 로컬 서버
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -142,21 +172,13 @@ class SignUpActivity : AppCompatActivity() {
     private fun <T> handleSignupResponse(response: Response<T>, prefillEmail: String) {
         if (response.isSuccessful) {
             val body = response.body()
-
-            // 성공 메시지 처리
             val message = when (body) {
                 is SignUpResponse -> body.message
                 else -> "회원가입이 완료되었습니다. 로그인해 주세요."
             }
-
             toast(message)
-
-            // 로그인 화면으로 복귀 (이메일 자동 채우기)
-            val data = Intent().putExtra("prefill_email", prefillEmail)
-            setResult(RESULT_OK, data)
-            finish()
+            goToLogin(prefillEmail)
         } else {
-            // 에러 처리
             val errorString = response.errorBody()?.string()
             val message = try {
                 gson.fromJson(errorString, ErrorResponse::class.java)?.error
@@ -170,20 +192,62 @@ class SignUpActivity : AppCompatActivity() {
                 }
             }
 
-            // 에러에 따라 적절한 필드에 표시
             when (response.code()) {
-                409 -> emailEt.error = message // 이메일 중복
-                400 -> {
-                    // 일반적인 입력 오류는 첫 번째 필드에 표시
-                    emailEt.error = message
-                }
-                else -> {
-                    // 기타 오류는 토스트로만 표시
-                    toast(message)
-                }
+                409 -> emailEt.error = message
+                400 -> emailEt.error = message
+                else -> toast(message)
             }
         }
     }
 
-    private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    // ---------------------------
+    // 👻 유령 애니메이션 관련 코드
+    // ---------------------------
+    private fun startGhostAnimation() {
+        // 좌우 왕복(-30dp ~ +30dp) — dp를 px로 변환
+        val rangeDp = 30f
+        val rangePx = rangeDp * resources.displayMetrics.density
+
+        ghostLRAnimator = ObjectAnimator.ofFloat(ghostIv, "translationX", -rangePx, rangePx).apply {
+            duration = 2200L
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+
+        // (선택) 살짝 떠 있는 느낌: 상하로 4dp 정도 천천히 왕복
+        val bobRangeDp = 4f
+        val bobRangePx = bobRangeDp * resources.displayMetrics.density
+        ghostBobAnimator = ObjectAnimator.ofFloat(ghostIv, "translationY", 0f, -bobRangePx).apply {
+            duration = 1800L
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 화면 복귀 시 애니메이션이 멈춰있다면 재시작
+        if (ghostLRAnimator?.isRunning != true) ghostLRAnimator?.start()
+        if (ghostBobAnimator?.isRunning != true) ghostBobAnimator?.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // 화면 벗어날 때는 살짝 멈춰 배터리 절약
+        ghostLRAnimator?.pause()
+        ghostBobAnimator?.pause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ghostLRAnimator?.cancel()
+        ghostBobAnimator?.cancel()
+    }
+
+    private fun toast(message: String) =
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }

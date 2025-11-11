@@ -9,7 +9,7 @@
     android:background="#FFFFFF">
 
     <!-- 커스텀 상단바 -->
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="56dp"
@@ -39,7 +39,7 @@
             android:textStyle="bold"
             android:textColor="#660099"
             android:textSize="18sp"/>
-    </FrameLayout>
+    </LinearLayout>
 
     <!-- 🔔 실시간 스팸/피싱 알림 스위치 (귀신 토글 포함) -->
     <androidx.constraintlayout.widget.ConstraintLayout
