@@ -13,7 +13,7 @@
         android:id="@+id/back_button"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:src="@drawable/ic_chevron_left_purple"
+        android:src="@drawable/ic_arrow_back"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="뒤로가기"
         app:layout_constraintStart_toStartOf="parent"
