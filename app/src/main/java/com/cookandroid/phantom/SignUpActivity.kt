@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -34,6 +35,7 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var btn: Button
     private lateinit var backBtn: ImageButton
     private lateinit var ghostIv: ImageView
+    private lateinit var loginLink: TextView  // 로그인 링크 추가
 
     // 유령 좌우 이동 애니메이터
     private var ghostLRAnimator: ObjectAnimator? = null
@@ -54,9 +56,15 @@ class SignUpActivity : AppCompatActivity() {
         phoneEt = findViewById(R.id.signupPhone)
         btn = findViewById(R.id.signupBtn)
         ghostIv = findViewById(R.id.signupGhost)
+        loginLink = findViewById(R.id.loginLink)  // 로그인 링크 초기화
 
         // 🔙 뒤로가기 → 로그인
         backBtn.setOnClickListener {
+            goToLogin(prefillEmail = emailEt.text.toString().trim())
+        }
+
+        // 📝 로그인 링크 클릭 → 로그인 화면으로 이동
+        loginLink.setOnClickListener {
             goToLogin(prefillEmail = emailEt.text.toString().trim())
         }
 

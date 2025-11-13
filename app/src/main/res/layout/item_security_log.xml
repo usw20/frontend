@@ -4,7 +4,8 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingVertical="10dp"
-    android:paddingHorizontal="6dp">
+    android:paddingHorizontal="6dp"
+    android:paddingBottom="12dp">
 
     <ImageView
         android:id="@+id/ivType"

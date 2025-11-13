@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton // ImageButton import 추가
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -34,11 +35,27 @@ class ScanResultActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.rvScanResults)
         btnResolve = findViewById(R.id.btnResolveAction)
 
-        // Toolbar 설정 (뒤로가기 버튼)
-        val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
+        // ⭐️ [수정된 부분]: 커스텀 툴바 설정
+        // 표준 Toolbar 대신 LinearLayout 내부의 커스텀 요소를 찾습니다.
+        val btnBack = findViewById<ImageButton>(R.id.btnBack)
+        val tvToolbarTitle = findViewById<TextView>(R.id.tvToolbarTitle)
+
+        // 커스텀 뒤로가기 버튼 리스너 연결
+        btnBack.setOnClickListener {
+            navigateBackToAppScan()
+        }
+
+        // 툴바 제목 설정
+        tvToolbarTitle.text = "검사 결과"
+
+
+        // --- [이전 코드에서 삭제해야 할 부분] ---
+        // val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
+        // setSupportActionBar(toolbar)
+        // supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        // supportActionBar?.setDisplayShowHomeEnabled(true)
+        // ----------------------------------------
+
 
         // 뒤로가기(물리/제스처)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -76,11 +93,13 @@ class ScanResultActivity : AppCompatActivity() {
         }
     }
 
-    // Toolbar 뒤로가기 처리
+    // ⭐️ [삭제된 부분]: onSupportNavigateUp() 함수는 이제 필요 없습니다. (커스텀 버튼 리스너에서 처리)
+    /*
     override fun onSupportNavigateUp(): Boolean {
         navigateBackToAppScan()
         return true
     }
+    */
 
     override fun onResume() {
         super.onResume()
@@ -96,6 +115,7 @@ class ScanResultActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+    // ... (이하 코드는 변경 없음)
 
     /** 삭제된 앱 제거 후 UI 갱신 */
     private fun refreshResults() {
