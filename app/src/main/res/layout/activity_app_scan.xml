@@ -50,7 +50,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="새로고침"
             android:padding="8dp"
-            android:src="@android:drawable/ic_menu_rotate"
+            android:src="@drawable/ic_refresh"
             app:tint="#FFFFFF"/>
     </LinearLayout>
 

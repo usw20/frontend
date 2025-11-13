@@ -1,11 +1,14 @@
 package com.cookandroid.phantom
 
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -34,6 +37,11 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var linkSignup: TextView
     private lateinit var tvFindId: TextView
     private lateinit var tvForgotPw: TextView
+    private lateinit var ghostIv: ImageView
+
+    // 👻 유령 애니메이터
+    private var ghostLRAnimator: ObjectAnimator? = null
+    private var ghostBobAnimator: ObjectAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +58,7 @@ class LoginActivity : AppCompatActivity() {
         linkSignup = findViewById(R.id.signupLink)
         tvFindId = findViewById(R.id.tvFindId)
         tvForgotPw = findViewById(R.id.tvForgotPw)
+        ghostIv = findViewById(R.id.logoCircle)
 
         // ✅ 뒤로가기(상단 아이콘) -> 메인으로
         findViewById<ImageButton>(R.id.back_button).setOnClickListener { goMain() }
@@ -64,6 +73,9 @@ class LoginActivity : AppCompatActivity() {
         linkSignup.setOnClickListener { startActivity(Intent(this, SignUpActivity::class.java)) }
         tvFindId.setOnClickListener { startActivity(Intent(this, FindIdActivity::class.java)) }
         tvForgotPw.setOnClickListener { startActivity(Intent(this, ForgotPasswordActivity::class.java)) }
+
+        // 👻 유령 애니메이션 시작
+        startGhostAnimation()
     }
 
     private fun goMain() {
@@ -167,5 +179,58 @@ class LoginActivity : AppCompatActivity() {
             pwEt.error = message
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // ---------------------------
+    // 👻 유령 애니메이션 관련 코드
+    // ---------------------------
+    private fun startGhostAnimation() {
+        // 좌우 왕복(-30dp ~ +30dp) — dp를 px로 변환
+        val rangeDp = 30f
+        val rangePx = rangeDp * resources.displayMetrics.density
+
+        ghostLRAnimator = ObjectAnimator.ofFloat(ghostIv, "translationX", -rangePx, rangePx).apply {
+            duration = 2200L
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+
+        // (선택) 살짝 떠 있는 느낌: 상하로 4dp 정도 천천히 왕복
+        val bobRangeDp = 4f
+        val bobRangePx = bobRangeDp * resources.displayMetrics.density
+        ghostBobAnimator = ObjectAnimator.ofFloat(ghostIv, "translationY", 0f, -bobRangePx).apply {
+            duration = 1800L
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 화면 복귀 시 애니메이션 재시작
+        ghostLRAnimator?.resume()
+        ghostBobAnimator?.resume()
+
+        // 만약 애니메이션이 취소되었다면 다시 생성
+        if (ghostLRAnimator?.isRunning != true && ghostLRAnimator?.isPaused != true) {
+            startGhostAnimation()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // 화면 벗어날 때는 살짝 멈춰 배터리 절약
+        ghostLRAnimator?.pause()
+        ghostBobAnimator?.pause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ghostLRAnimator?.cancel()
+        ghostBobAnimator?.cancel()
     }
 }

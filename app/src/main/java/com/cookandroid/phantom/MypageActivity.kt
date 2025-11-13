@@ -1,15 +1,17 @@
-// app/src/main/java/com/cookandroid/phantom/MypageActivity.kt
 package com.cookandroid.phantom
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,29 +27,42 @@ import java.util.concurrent.TimeUnit
 
 class MypageActivity : AppCompatActivity() {
 
-    // ====== UI 색상/탭 ======
-    private val PURPLE = Color.parseColor("#660099")
-    private val BLACK  = Color.parseColor("#000000")
-
-    private lateinit var tabSecurity: View
-    private lateinit var tabHome: View
-    private lateinit var tabMypage: View
-
+    // ====== UI 뷰들 ======
+    // 네비게이션
+    private lateinit var tabSecurity: LinearLayout
+    private lateinit var tabHome: LinearLayout
+    private lateinit var tabMypage: LinearLayout
+    private lateinit var ivSecurity: ImageView
+    private lateinit var ivHome: ImageView
+    private lateinit var ivMypage: ImageView
     private lateinit var tvSecurity: TextView
     private lateinit var tvHome: TextView
     private lateinit var tvMypage: TextView
 
-    private enum class Tab { HOME, SECURITY, MYPAGE }
-
-    // ====== 프로필 UI ======
+    // 프로필
     private lateinit var tvUserName: TextView
     private lateinit var tvUserEmail: TextView
     private lateinit var tvUserPhone: TextView
-    private lateinit var btnEditProfile: TextView
+    private lateinit var btnEditProfile: ImageView
 
-    // ====== 액션 버튼 ======
-    private lateinit var btnLogout: TextView
-    private lateinit var btnDeleteAccount: TextView
+    // 플랜
+    private lateinit var tvPlan: TextView
+    private lateinit var btnUpgrade: Button
+
+    // 보안 관리
+    private lateinit var rowPrivacy: LinearLayout
+    private lateinit var rowNoti: LinearLayout
+    private lateinit var rowChangePassword: LinearLayout
+
+    // 앱 정보
+    private lateinit var rowDataUsage: LinearLayout
+    private lateinit var rowFaq: LinearLayout
+    private lateinit var rowAbout: LinearLayout
+    private lateinit var tvVersion: TextView
+
+    // 계정 관리
+    private lateinit var btnLogout: LinearLayout
+    private lateinit var btnDeleteAccount: LinearLayout
 
     // ====== 네트워크 ======
     private lateinit var userApi: MUserApi
@@ -56,109 +71,172 @@ class MypageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mypage)
 
-        // ---- 하단 탭 ----
-        tabSecurity = findViewById(R.id.tab_security)
-        tabHome     = findViewById(R.id.tab_home)
-        tabMypage   = findViewById(R.id.tab_mypage)
+        // Views 초기화
+        initViews()
 
-        tvSecurity  = findViewById(R.id.tvSecurity)
-        tvHome      = findViewById(R.id.tvHome)
-        tvMypage    = findViewById(R.id.tvMypage)
+        // 네비게이션 설정
+        setupNavigation()
 
-        highlight(Tab.MYPAGE)
-
-        tabSecurity.setOnClickListener {
-            if (currentTab() != Tab.SECURITY) {
-                startActivity(Intent(this, SecurityActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                })
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                finish()
-            }
-        }
-        tabHome.setOnClickListener {
-            if (currentTab() != Tab.HOME) {
-                startActivity(Intent(this, MainPageActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                })
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-                finish()
-            }
-        }
-        tabMypage.setOnClickListener { /* 현재 탭 */ }
-
-        // ---- 프로필 뷰 ----
-        tvUserName      = findViewById(R.id.tvUserName)
-        tvUserEmail     = findViewById(R.id.tvUserEmail)
-        tvUserPhone     = findViewById(R.id.tvUserPhone)
-        btnEditProfile  = findViewById(R.id.btnEditProfile)
-
-        // ---- 액션 버튼 ----
-        btnLogout        = findViewById(R.id.btnLogout)
-        btnDeleteAccount = findViewById(R.id.btnDeleteAccount)
-
-        // ---- Retrofit 준비 (/api/ base) ----
+        // Retrofit 준비
         userApi = buildRetrofitWithAuth_M(this).create(MUserApi::class.java)
 
-        // ---- 로그인 여부에 따라 UI 스위칭 ----
+        // 로그인 여부에 따라 UI 설정
         val isLoggedIn = !getToken_M(this).isNullOrBlank()
+        setupUI(isLoggedIn)
+
+        // 클릭 리스너 설정
+        setupClickListeners(isLoggedIn)
+
+        // 로그인 상태면 프로필 로드
+        if (isLoggedIn) {
+            fetchProfile()
+        }
+    }
+
+    private fun initViews() {
+        // 네비게이션
+        tabSecurity = findViewById(R.id.tab_security)
+        tabHome = findViewById(R.id.tab_home)
+        tabMypage = findViewById(R.id.tab_mypage)
+        ivSecurity = findViewById(R.id.ivSecurity)
+        ivHome = findViewById(R.id.ivHome)
+        ivMypage = findViewById(R.id.ivMypage)
+        tvSecurity = findViewById(R.id.tvSecurity)
+        tvHome = findViewById(R.id.tvHome)
+        tvMypage = findViewById(R.id.tvMypage)
+
+        // 프로필
+        tvUserName = findViewById(R.id.tvUserName)
+        tvUserEmail = findViewById(R.id.tvUserEmail)
+        tvUserPhone = findViewById(R.id.tvUserPhone)
+        btnEditProfile = findViewById(R.id.btnEditProfile)
+
+        // 플랜
+        tvPlan = findViewById(R.id.tvPlan)
+        btnUpgrade = findViewById(R.id.btnUpgrade)
+
+        // 보안 관리
+        rowPrivacy = findViewById(R.id.rowPrivacy)
+        rowNoti = findViewById(R.id.rowNoti)
+        rowChangePassword = findViewById(R.id.rowChangePassword)
+
+        // 앱 정보
+        rowDataUsage = findViewById(R.id.rowDataUsage)
+        rowFaq = findViewById(R.id.rowFaq)
+        rowAbout = findViewById(R.id.rowAbout)
+        tvVersion = findViewById(R.id.tvVersion)
+
+        // 계정 관리
+        btnLogout = findViewById(R.id.btnLogout)
+        btnDeleteAccount = findViewById(R.id.btnDeleteAccount)
+    }
+
+    private fun setupNavigation() {
+        // 현재 페이지 강조 (마이페이지) - 텍스트만 변경
+        tvMypage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_purple))
+        tvMypage.setTypeface(null, android.graphics.Typeface.BOLD)
+
+        // 다른 탭들은 회색 - 텍스트만 변경
+        tvSecurity.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+        tvHome.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+
+        tabSecurity.setOnClickListener {
+            startActivity(Intent(this, SecurityActivity::class.java))
+            finish()
+        }
+        tabHome.setOnClickListener {
+            startActivity(Intent(this, MainPageActivity::class.java))
+            finish()
+        }
+        tabMypage.setOnClickListener { /* 현재 화면 */ }
+    }
+
+    private fun setupUI(isLoggedIn: Boolean) {
         if (isLoggedIn) {
             // 로그인 상태
-            tvUserName.visibility = View.VISIBLE
             tvUserName.text = "팬텀 사용자"
-
             tvUserEmail.visibility = View.VISIBLE
             tvUserPhone.visibility = View.VISIBLE
             btnLogout.visibility = View.VISIBLE
             btnDeleteAccount.visibility = View.VISIBLE
-
-            // ▶ 프로필 수정 → 비밀번호 변경 화면
-            btnEditProfile.text = "비밀번호 변경"
-            btnEditProfile.setTextColor(PURPLE)
-            btnEditProfile.setOnClickListener {
-                startActivity(Intent(this, ChangePasswordActivity::class.java))
-            }
-
-            btnLogout.setOnClickListener {
-                clearToken_M(this)
-                Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
-                goLoginClearTask()
-            }
-            btnDeleteAccount.setOnClickListener { showDeleteConfirm() }
-
-            // 프로필 로딩
-            fetchProfile()
         } else {
             // 비로그인 상태
-            tvUserName.visibility = View.VISIBLE
             tvUserName.text = "로그인이 필요합니다"
-
             tvUserEmail.visibility = View.GONE
             tvUserPhone.visibility = View.GONE
             btnLogout.visibility = View.GONE
             btnDeleteAccount.visibility = View.GONE
+        }
 
-            btnEditProfile.text = "로그인"
-            btnEditProfile.setTextColor(PURPLE)
-            btnEditProfile.setOnClickListener {
-                startActivity(Intent(this, LoginActivity::class.java))
-            }
+        // 버전 정보
+        try {
+            val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+            tvVersion.text = "v$versionName"
+        } catch (e: Exception) {
+            tvVersion.text = "v1.0.0"
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        highlight(Tab.MYPAGE)
-    }
+    private fun setupClickListeners(isLoggedIn: Boolean) {
+        // 프로필 수정 / 로그인
+        btnEditProfile.setOnClickListener {
+            if (isLoggedIn) {
+                startActivity(Intent(this, ChangePasswordActivity::class.java))
+            } else {
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
+        }
 
-    private fun currentTab(): Tab = Tab.MYPAGE
+        // 프리미엄 업그레이드
+        btnUpgrade.setOnClickListener {
+            Toast.makeText(this, "프리미엄 플랜 준비중입니다", Toast.LENGTH_SHORT).show()
+            // TODO: 결제 화면으로 이동
+        }
 
-    private fun highlight(tab: Tab) {
-        fun TextView.tint(c: Int) = setTextColor(c)
-        when (tab) {
-            Tab.HOME     -> { tvHome.tint(PURPLE);    tvSecurity.tint(BLACK); tvMypage.tint(BLACK) }
-            Tab.SECURITY -> { tvSecurity.tint(PURPLE); tvHome.tint(BLACK);    tvMypage.tint(BLACK) }
-            Tab.MYPAGE   -> { tvMypage.tint(PURPLE);  tvHome.tint(BLACK);     tvSecurity.tint(BLACK) }
+        // 보안 관리
+        rowPrivacy.setOnClickListener {
+            Toast.makeText(this, "개인정보 권한 설정", Toast.LENGTH_SHORT).show()
+            // TODO: 권한 설정 화면으로 이동
+        }
+
+        rowNoti.setOnClickListener {
+            Toast.makeText(this, "알림 설정", Toast.LENGTH_SHORT).show()
+            // TODO: 알림 설정 화면으로 이동
+        }
+
+        rowChangePassword.setOnClickListener {
+            if (isLoggedIn) {
+                startActivity(Intent(this, ChangePasswordActivity::class.java))
+            } else {
+                Toast.makeText(this, "로그인이 필요합니다", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
+        }
+
+        // 앱 정보
+        rowDataUsage.setOnClickListener {
+            Toast.makeText(this, "데이터 사용 리포트", Toast.LENGTH_SHORT).show()
+            // TODO: 데이터 리포트 화면으로 이동
+        }
+
+        rowFaq.setOnClickListener {
+            Toast.makeText(this, "도움말 / FAQ", Toast.LENGTH_SHORT).show()
+            // TODO: FAQ 화면으로 이동
+        }
+
+        rowAbout.setOnClickListener {
+            showAboutDialog()
+        }
+
+        // 계정 관리
+        if (isLoggedIn) {
+            btnLogout.setOnClickListener {
+                showLogoutConfirm()
+            }
+
+            btnDeleteAccount.setOnClickListener {
+                showDeleteConfirm()
+            }
         }
     }
 
@@ -172,6 +250,9 @@ class MypageActivity : AppCompatActivity() {
                     if (body != null) {
                         tvUserEmail.text = body.email ?: "-"
                         tvUserPhone.text = formatPhone(body.phoneNumber)
+
+                        // 플랜 정보 업데이트 (서버에서 받아온다면)
+                        // tvPlan.text = body.plan ?: "Free Plan"
                     } else {
                         toast("프로필 응답이 비어있습니다.")
                     }
@@ -188,20 +269,37 @@ class MypageActivity : AppCompatActivity() {
         }
     }
 
+    // =================== 로그아웃 ===================
+    private fun showLogoutConfirm() {
+        AlertDialog.Builder(this)
+            .setTitle("로그아웃")
+            .setMessage("로그아웃 하시겠습니까?")
+            .setNegativeButton("취소", null)
+            .setPositiveButton("확인") { _, _ ->
+                clearToken_M(this)
+                Toast.makeText(this, "로그아웃 되었습니다", Toast.LENGTH_SHORT).show()
+                goLoginClearTask()
+            }
+            .show()
+    }
+
+    // =================== 계정 탈퇴 ===================
     private fun showDeleteConfirm() {
         AlertDialog.Builder(this)
-            .setTitle("계정을 삭제하시겠습니까?")
-            .setMessage("탈퇴 후에는 데이터 복구가 불가능합니다.")
+            .setTitle("계정 탈퇴")
+            .setMessage("정말로 계정을 삭제하시겠습니까?\n탈퇴 후에는 데이터 복구가 불가능합니다.")
             .setNegativeButton("취소", null)
             .setPositiveButton("삭제") { _, _ -> deleteAccount() }
             .show()
     }
 
     private fun deleteAccount() {
-        setActionsEnabled(false) // 버튼 중복 클릭 방지
+        setActionsEnabled(false)
         lifecycleScope.launch {
             try {
-                val res: Response<MDeleteResponse> = withContext(Dispatchers.IO) { userApi.deleteAccount() }
+                val res: Response<MDeleteResponse> = withContext(Dispatchers.IO) {
+                    userApi.deleteAccount()
+                }
                 if (res.isSuccessful) {
                     val msg = res.body()?.message ?: "계정이 성공적으로 삭제되었습니다."
                     toast(msg)
@@ -222,39 +320,74 @@ class MypageActivity : AppCompatActivity() {
         }
     }
 
+    // =================== 앱 정보 다이얼로그 ===================
+    private fun showAboutDialog() {
+        val versionName = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (e: Exception) {
+            "1.0.0"
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("팬텀 (Phantom)")
+            .setMessage(
+                """
+                버전: $versionName
+                
+                실시간 보안 솔루션
+                스팸/피싱 탐지 및 악성코드 차단
+                
+                © 2024 Phantom Security
+                """.trimIndent()
+            )
+            .setPositiveButton("확인", null)
+            .show()
+    }
+
+    // =================== 유틸리티 ===================
     private fun setActionsEnabled(enabled: Boolean) {
         btnLogout.isEnabled = enabled
         btnDeleteAccount.isEnabled = enabled
+        btnLogout.alpha = if (enabled) 1.0f else 0.5f
+        btnDeleteAccount.alpha = if (enabled) 1.0f else 0.5f
     }
 
     private fun goLoginClearTask() {
-        val i = Intent(this, LoginActivity::class.java).apply {
+        val intent = Intent(this, LoginActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
-        startActivity(i)
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        startActivity(intent)
+        finish()
     }
 
     private fun formatPhone(raw: String?): String {
-        val d = raw?.filter { it.isDigit() }.orEmpty()
-        if (d.isBlank()) return "-"
-        return when (d.length) {
-            10 -> "${d.substring(0,3)}-${d.substring(3,6)}-${d.substring(6)}"
-            11 -> "${d.substring(0,3)}-${d.substring(3,7)}-${d.substring(7)}"
+        val digits = raw?.filter { it.isDigit() }.orEmpty()
+        if (digits.isBlank()) return "-"
+        return when (digits.length) {
+            10 -> "${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}"
+            11 -> "${digits.substring(0, 3)}-${digits.substring(3, 7)}-${digits.substring(7)}"
             else -> raw ?: "-"
         }
     }
 
-    private fun toast(msg: String) =
+    private fun toast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 네비게이션 텍스트 강조 유지
+        tvMypage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_purple))
+        tvMypage.setTypeface(null, android.graphics.Typeface.BOLD)
+    }
 }
 
-// =================== (이 파일 전용) 네트워크 유틸/모델 ===================
-
+// =================== 네트워크 모델 ===================
 private data class MProfileResponse(
     val id: String? = null,
     val email: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val plan: String? = null
 )
 
 private data class MDeleteResponse(
@@ -269,7 +402,7 @@ private interface MUserApi {
     suspend fun deleteAccount(): Response<MDeleteResponse>
 }
 
-// ===== SharedPreferences (토큰) =====
+// =================== SharedPreferences ===================
 private const val PREFS = "phantom_prefs"
 private const val KEY_TOKEN = "jwt_token"
 
@@ -279,10 +412,10 @@ private fun getToken_M(ctx: Context): String? =
 
 private fun clearToken_M(ctx: Context) {
     ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        .edit().putString(KEY_TOKEN, null).apply()
+        .edit().remove(KEY_TOKEN).apply()
 }
 
-// ===== Retrofit + JWT 인터셉터 + 타임아웃 =====
+// =================== Retrofit ===================
 private fun buildRetrofitWithAuth_M(ctx: Context): Retrofit {
     val authInterceptor = Interceptor { chain ->
         val req = chain.request()
@@ -303,7 +436,6 @@ private fun buildRetrofitWithAuth_M(ctx: Context): Retrofit {
         .build()
 
     return Retrofit.Builder()
-        // 에뮬레이터 ↔ PC: 10.0.2.2 (물리 기기면 PC LAN IP로 교체)
         .baseUrl("http://10.0.2.2:8080/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())

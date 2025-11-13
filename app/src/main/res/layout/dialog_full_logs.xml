@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootDialog"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/bg_dialog_rounded">
+
+    <!-- 헤더 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="전체 탐지 로그"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#222222"/>
+
+        <TextView
+            android:id="@+id/btnClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="닫기"
+            android:textSize="14sp"
+            android:padding="6dp"
+            android:textColor="#660099"/>
+    </LinearLayout>
+
+    <!-- 서브 텍스트 -->
+    <TextView
+        android:id="@+id/tvSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="피싱/악성코드 탐지 내역을 최신순으로 표시합니다."
+        android:textSize="12sp"
+        android:textColor="#777777"
+        android:paddingBottom="8dp"/>
+
+    <!-- 구분선 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"/>
+
+    <!-- 리스트 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFullLogs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="200dp"
+        android:maxHeight="520dp"
+        android:overScrollMode="never"
+        android:nestedScrollingEnabled="true"
+        android:paddingTop="8dp"/>
+
+    <!-- 비었을 때 -->
+    <LinearLayout
+        android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/shield"
+            android:alpha="0.25"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="표시할 로그가 없습니다."
+            android:textColor="#999999"/>
+    </LinearLayout>
+</LinearLayout>

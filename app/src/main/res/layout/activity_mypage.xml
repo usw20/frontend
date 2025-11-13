@@ -5,20 +5,40 @@
     android:id="@+id/mypage_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="#F5F5F5">
+
+    <!-- 상단 헤더 -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/gradient_background"
+        android:orientation="vertical"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:text="마이페이지"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <!-- 스크롤 영역 -->
     <ScrollView
         android:id="@+id/scrollArea"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNav"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:clipToPadding="false"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp">
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -30,320 +50,495 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp">
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/white"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:background="@drawable/shadow"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:padding="20dp">
 
                     <ImageView
                         android:id="@+id/ivAvatar"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:src="@drawable/mypage"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:background="@drawable/circle_bg"
-                        android:padding="12dp"
-                        android:contentDescription="프로필"/>
+                        android:contentDescription="프로필"
+                        android:padding="14dp"
+                        android:src="@drawable/mypage" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
+                        android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/tvUserName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="팬텀 사용자"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="#000000"/>
+                            android:textColor="#000000"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/tvUserEmail"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="user@example.com"
-                            android:textSize="12sp"
-                            android:textColor="#99000000"/>
+                            android:textColor="#666666"
+                            android:textSize="13sp" />
+
                         <TextView
                             android:id="@+id/tvUserPhone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="010-0000-0000"
-                            android:textSize="12sp"
-                            android:textColor="#99000000"
-                            android:layout_marginTop="2dp"/>
+                            android:textColor="#666666"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
-                    <TextView
+                    <ImageView
                         android:id="@+id/btnEditProfile"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="프로필 수정"
-                        android:textSize="12sp"
-                        android:textColor="#660099"/>
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:clickable="true"
+                        android:contentDescription="프로필 수정"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:src="@android:drawable/ic_menu_edit"
+                        app:tint="#660099" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 구독/라이선스 상태 -->
+            <!-- 구독 플랜 카드 -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp">
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/white"
                     android:orientation="vertical"
-                    android:background="@drawable/shadow"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="플랜 / 라이선스"
-                        android:textColor="#660099"
-                        android:textSize="12sp"/>
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_protect"
+                            android:scaleType="centerInside"
+                            android:scaleX="2"
+                            android:scaleY="2"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:text="현재 플랜"
+                            android:textColor="#666666"
+                            android:textSize="13sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvPlan"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Free (만료: - )"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
+                        android:layout_marginTop="8dp"
+                        android:text="Free Plan"
                         android:textColor="#000000"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
 
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/btnUpgrade"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp">
-
-                        <TextView
-                            android:id="@+id/btnManagePlan"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="플랜 관리"
-                            android:textColor="#660099"
-                            android:textStyle="bold"/>
-
-                        <TextView
-                            android:id="@+id/btnRedeem"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="   코드 등록"
-                            android:textColor="#660099"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
+                        android:layout_height="48dp"
+                        android:layout_marginTop="12dp"
+                        android:backgroundTint="#660099"
+                        android:text="프리미엄으로 업그레이드"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="8dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 기기 보호/개인정보/알림 등 빠른 설정 -->
+            <!-- 보안 관리 섹션 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="보안 관리"
+                android:textColor="#666666"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp">
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/white"
                     android:orientation="vertical"
-                    android:background="@drawable/shadow"
-                    android:padding="16dp">
+                    android:paddingVertical="8dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="빠른 설정"
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:textColor="#660099"/>
-
-                    <!-- 항목 2: 개인정보 권한 -->
+                    <!-- 개인정보 권한 -->
                     <LinearLayout
                         android:id="@+id/rowPrivacy"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         android:gravity="center_vertical"
-                        android:paddingVertical="8dp">
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="14dp">
 
                         <ImageView
-                            android:layout_width="24dp"
+                            android:layout_width="22dp"
                             android:layout_height="24dp"
+                            android:contentDescription="개인정보"
                             android:src="@drawable/ic_spam"
-                            android:contentDescription="개인정보 권한"/>
+                            android:scaleType="centerInside"
+                            android:scaleX="2"
+                            android:scaleY="2"/>
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="개인정보 권한"
                             android:textColor="#000000"
-                            android:textSize="14sp"
-                            android:layout_marginStart="10dp"/>
+                            android:textSize="15sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="관리"
-                            android:textColor="#660099"/>
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            android:rotation="180"
+                            app:tint="#AAAAAA" />
                     </LinearLayout>
 
-                    <!-- 항목 3: 알림 설정 -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#F0F0F0" />
+
+                    <!-- 알림 설정 -->
                     <LinearLayout
                         android:id="@+id/rowNoti"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         android:gravity="center_vertical"
-                        android:paddingVertical="8dp">
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="14dp">
 
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
+                            android:contentDescription="알림"
                             android:src="@android:drawable/ic_dialog_info"
-                            android:contentDescription="알림 설정"/>
+                            app:tint="#660099" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
                             android:layout_weight="1"
                             android:text="알림 설정"
                             android:textColor="#000000"
-                            android:textSize="14sp"
-                            android:layout_marginStart="10dp"/>
+                            android:textSize="15sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="관리"
-                            android:textColor="#660099"/>
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            android:rotation="180"
+                            app:tint="#AAAAAA" />
                     </LinearLayout>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#F0F0F0" />
+
+                    <!-- 비밀번호 변경 -->
+                    <LinearLayout
+                        android:id="@+id/rowChangePassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="14dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="비밀번호"
+                            android:src="@android:drawable/ic_lock_idle_lock"
+                            app:tint="#660099" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_weight="1"
+                            android:text="비밀번호 변경"
+                            android:textColor="#000000"
+                            android:textSize="15sp" />
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            android:rotation="180"
+                            app:tint="#AAAAAA" />
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 앱 정보 / 고객센터 -->
+            <!-- 앱 정보 섹션 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="앱 정보"
+                android:textColor="#666666"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp">
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/white"
                     android:orientation="vertical"
-                    android:background="@drawable/shadow"
-                    android:padding="16dp">
+                    android:paddingVertical="8dp">
 
+                    <!-- 데이터 사용 리포트 -->
                     <LinearLayout
                         android:id="@+id/rowDataUsage"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         android:gravity="center_vertical"
-                        android:paddingVertical="8dp">
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="14dp">
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="데이터 사용 리포트"
                             android:textColor="#000000"
-                            android:textSize="14sp"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="열기"
-                            android:textColor="#660099"/>
+                            android:textSize="15sp" />
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            android:rotation="180"
+                            app:tint="#AAAAAA" />
                     </LinearLayout>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#F0F0F0" />
+
+                    <!-- FAQ -->
                     <LinearLayout
                         android:id="@+id/rowFaq"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         android:gravity="center_vertical"
-                        android:paddingVertical="8dp">
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="14dp">
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="도움말 / FAQ"
                             android:textColor="#000000"
-                            android:textSize="14sp"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="보기"
-                            android:textColor="#660099"/>
+                            android:textSize="15sp" />
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            android:rotation="180"
+                            app:tint="#AAAAAA" />
                     </LinearLayout>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#F0F0F0" />
+
+                    <!-- 앱 버전 -->
                     <LinearLayout
                         android:id="@+id/rowAbout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         android:gravity="center_vertical"
-                        android:paddingVertical="8dp">
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="14dp">
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="앱 정보 / 버전"
                             android:textColor="#000000"
-                            android:textSize="14sp"/>
+                            android:textSize="15sp" />
+
                         <TextView
                             android:id="@+id/tvVersion"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
                             android:text="v1.0.0"
-                            android:textColor="#660099"/>
-                    </LinearLayout>
+                            android:textColor="#999999"
+                            android:textSize="14sp" />
 
-                    <TextView
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            android:rotation="180"
+                            app:tint="#AAAAAA" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 계정 관리 섹션 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/white"
+                    android:orientation="vertical"
+                    android:paddingVertical="8dp">
+
+                    <!-- 로그아웃 -->
+                    <LinearLayout
                         android:id="@+id/btnLogout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="로그아웃"
-                        android:textStyle="bold"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
                         android:gravity="center"
-                        android:paddingVertical="12dp"
-                        android:textColor="#660099"
-                        android:layout_marginTop="4dp"/>
-                    <TextView
+                        android:orientation="horizontal"
+                        android:paddingVertical="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="로그아웃"
+                            android:textColor="#660099"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="20dp"
+                        android:background="#F0F0F0" />
+
+                    <!-- 계정 탈퇴 -->
+                    <LinearLayout
                         android:id="@+id/btnDeleteAccount"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="계정 탈퇴"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:paddingVertical="12dp"
-                        android:textColor="#B00020"
-                        android:layout_marginTop="8dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"/>
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingVertical="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="계정 탈퇴"
+                            android:textColor="#B00020"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

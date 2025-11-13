@@ -2,11 +2,13 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F6F4">
+    android:background="@drawable/gradient_background"
+    tools:context="">
 
-    <!-- 뒤로가기 (상단 고정) -->
+    <!-- 뒤로가기 -->
     <ImageButton
         android:id="@+id/back_button"
         android:layout_width="30dp"
@@ -16,119 +18,209 @@
         android:contentDescription="뒤로가기"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="80dp" />
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        app:tint="@android:color/white" />
 
-    <!-- 회원가입 카드: 화면 '정가운데' -->
+    <!-- 로고/아이콘 영역 -->
+    <ImageView
+        android:id="@+id/signupGhost"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/ic_protect"
+        android:scaleType="centerInside"
+        android:scaleX="3"
+        android:scaleY="3"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="60dp" />
+
+    <!-- 메인 타이틀 -->
+    <TextView
+        android:id="@+id/signupTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="회원가입"
+        android:textSize="42sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.05"
+        android:textColor="@android:color/white"
+        android:shadowColor="#80000000"
+        android:shadowDx="0"
+        android:shadowDy="4"
+        android:shadowRadius="8"
+        app:layout_constraintTop_toBottomOf="@id/signupGhost"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
+    <!-- 서브 타이틀 -->
+    <TextView
+        android:id="@+id/subTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="팬텀과 함께 안전한 보안을 시작하세요"
+        android:textColor="@android:color/white"
+        android:alpha="0.9"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/signupTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
+
     <androidx.cardview.widget.CardView
         android:id="@+id/signupCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="8dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginEnd="28dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.5">   <!-- ✅ 세로 중앙 정렬 -->
+        app:layout_constraintTop_toBottomOf="@id/subTitle"
+        android:layout_marginTop="40dp"
+        tools:ignore="MissingConstraints">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="32dp"
+            android:background="@android:color/white">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- 이메일 입력 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/emailInputLayout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="회원가입"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="#660099"
-                android:layout_gravity="center_horizontal"
-                android:paddingBottom="16dp" />
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="#660099"
+                app:hintTextColor="#660099"
+                app:startIconDrawable="@android:drawable/ic_dialog_email"
+                app:startIconTint="#660099">
 
-            <EditText
-                android:id="@+id/signupEmail"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signupEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="이메일"
+                    android:inputType="textEmailAddress"
+                    android:padding="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 전화번호 입력 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/phoneInputLayout"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="이메일"
-                android:drawablePadding="12dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/rounded_input_background"
-                android:inputType="textEmailAddress"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:layout_marginBottom="16dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="#660099"
+                app:hintTextColor="#660099"
+                app:startIconDrawable="@android:drawable/stat_sys_phone_call"
+                app:startIconTint="#660099">
 
-            <EditText
-                android:id="@+id/signupPhone"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signupPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="전화번호 (숫자만)"
+                    android:inputType="phone"
+                    android:padding="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 비밀번호 입력 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/passwordInputLayout"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="전화번호(숫자만)"
-                android:inputType="phone"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/rounded_input_background"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="#660099"
+                app:hintTextColor="#660099"
+                app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+                app:startIconTint="#660099"
+                app:endIconMode="password_toggle"
+                app:endIconTint="#660099">
 
-            <EditText
-                android:id="@+id/signupPassword"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signupPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="비밀번호"
+                    android:inputType="textPassword"
+                    android:padding="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 비밀번호 확인 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/confirmPasswordInputLayout"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="비밀번호"
-                android:drawablePadding="12dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/rounded_input_background"
-                android:inputType="textPassword"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:layout_marginBottom="16dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="#660099"
+                app:hintTextColor="#660099"
+                app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+                app:startIconTint="#660099"
+                app:endIconMode="password_toggle"
+                app:endIconTint="#660099">
 
-            <EditText
-                android:id="@+id/signupConfirmPassword"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="비밀번호 확인"
-                android:drawablePadding="12dp"
-                android:paddingHorizontal="16dp"
-                android:background="@drawable/rounded_input_background"
-                android:inputType="textPassword"
-                android:textColor="#000000"
-                android:textSize="16sp"
-                android:layout_marginBottom="24dp" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/signupConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="비밀번호 확인"
+                    android:inputType="textPassword"
+                    android:padding="14dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- 가입하기 버튼 -->
             <Button
                 android:id="@+id/signupBtn"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="가입하기"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF"
+                android:layout_marginTop="24dp"
                 android:backgroundTint="#660099"
-                android:elevation="6dp"
-                android:background="@drawable/rounded_button_background"/>
+                android:text="가입하기"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                app:cornerRadius="12dp"
+                android:elevation="4dp" />
+
+            <!-- 로그인 이동 -->
+            <TextView
+                android:id="@+id/loginLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:text="이미 계정이 있으신가요? 로그인"
+                android:textColor="#660099"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- 유령: 카드 상단에 살짝 겹치게 + 세로 중앙 배치 보조 -->
-    <ImageView
-        android:id="@+id/signupGhost"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/ic_protect"
-        android:contentDescription="회원가입 유령"
-        android:scaleType="centerInside"
-        android:scaleX="2"
-        android:scaleY="2"
-        app:layout_constraintBottom_toTopOf="@id/signupCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="-24dp"
-    android:elevation="12dp"
-    android:translationZ="12dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
