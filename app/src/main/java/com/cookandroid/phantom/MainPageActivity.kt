@@ -12,11 +12,13 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.TranslateAnimation
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -30,7 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import com.cookandroid.phantom.data.local.TokenDataStore
 import kotlinx.coroutines.launch
 
-// 검색 애니용
+// 검색 애니용 (ObjectAnimator)
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
@@ -54,6 +56,9 @@ class MainPageActivity : AppCompatActivity() {
     private lateinit var tvHome: TextView
     private lateinit var tvMypage: TextView
 
+    // 🔑 상단 로그인 버튼
+    private lateinit var btnTopLogin: Button
+
     // 상단 큰 유령 & 둥둥 애니(알파 변화 없음)
     private var ghost: ImageView? = null
     private var ghostFloatAnim: TranslateAnimation? = null
@@ -73,7 +78,7 @@ class MainPageActivity : AppCompatActivity() {
     // (옵션) 아이콘 옆 오버레이 말풍선
     private var bubbleView: TextView? = null
 
-    // --- 스팸/피싱 유령 “검색 중” 애니 (알파 변화 없음) ---
+    // --- 스팸/피싱 유령 “검색 중” 애니 (ObjectAnimator) ---
     private var spamSearchSet: AnimatorSet? = null
 
     // --- 악성코드 카드: 빨간 느낌표 배지 ---
@@ -116,6 +121,18 @@ class MainPageActivity : AppCompatActivity() {
 
         ghost = findViewById(R.id.ghostImage)
         badgeAlert = findViewById(R.id.badgeAlert) // 악성코드 카드 배지
+
+        // 🔑 상단 로그인 버튼 바인딩 + 클릭
+        btnTopLogin = findViewById(R.id.btnTopLogin)
+        btnTopLogin.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+        // ✨ press-in / release-out (res/anim) 적용
+        attachPressInOutAnim(btnTopLogin, R.anim.button_press_in, R.anim.btn_press_out)
+
+        // 최초 표시/숨김 상태 반영
+        updateLoginButtonVisibility()
 
         // 홈 탭 하이라이트
         highlightTab(Tab.HOME)
@@ -205,6 +222,9 @@ class MainPageActivity : AppCompatActivity() {
         super.onResume()
         ghost?.startAnimation(ghostFloatAnim)
         highlightTab(Tab.HOME)
+
+        // 🔑 돌아올 때 로그인 버튼 표시/숨김 갱신
+        updateLoginButtonVisibility()
 
         // 미니 말풍선 루프 시작
         if (!miniLoopRunning) {
@@ -297,6 +317,16 @@ class MainPageActivity : AppCompatActivity() {
     }
 
     // ============================================================
+    // 🔑 로그인 체크 후 버튼 표시/숨김
+    // ============================================================
+    private fun updateLoginButtonVisibility() {
+        lifecycleScope.launch {
+            val token = tokenStore.getToken()
+            btnTopLogin.visibility = if (token.isNullOrEmpty()) View.VISIBLE else View.GONE
+        }
+    }
+
+    // ============================================================
     // 로그인 체크 후 네비게이션 공통
     // ============================================================
     private fun checkLoginAndNavigate(destination: Class<*>) {
@@ -341,6 +371,34 @@ class MainPageActivity : AppCompatActivity() {
             override fun onAnimationEnd(animation: Animation?) { onEnd() }
         })
         return this
+    }
+
+    // ------------------- 버튼 press-in / release-out (res/anim) -------------------
+    private fun attachPressInOutAnim(button: View, pressAnimRes: Int, releaseAnimRes: Int) {
+        var isPressed = false
+        button.setOnTouchListener { v, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (!isPressed) {
+                        isPressed = true
+                        // scale/alpha 등은 anim XML로, 입체감은 elevation 살짝 올려줌
+                        v.clearAnimation()
+                        v.startAnimation(AnimationUtils.loadAnimation(this, pressAnimRes))
+                        v.animate().setDuration(80).translationZ(dp(6).toFloat()).withLayer().start()
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (isPressed) {
+                        isPressed = false
+                        v.clearAnimation()
+                        v.startAnimation(AnimationUtils.loadAnimation(this, releaseAnimRes))
+                        v.animate().setDuration(120).translationZ(dp(1).toFloat()).withLayer().start()
+                    }
+                }
+            }
+            // false로 해야 클릭 이벤트/리플 그대로 동작
+            false
+        }
     }
 
     // ------------------- (A) 동그라미 안 미니 말풍선 -------------------
