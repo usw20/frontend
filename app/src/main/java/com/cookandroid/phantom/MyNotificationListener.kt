@@ -1,23 +1,62 @@
 package com.cookandroid.phantom.notification
 
-import android.R // 안드로이드 기본 아이콘 사용 (stat_sys_warning, ic_menu_view, ic_menu_copy 등)
+import android.R // 안드로이드 기본 아이콘 사용
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.cookandroid.phantom.SpamCheckActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.POST
+import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.LinkedHashMap
+import java.util.Locale
 import java.util.regex.Pattern
 
 class MyNotificationListener : NotificationListenerService() {
+
+    // ===== 백엔드 DTO & API =====
+    data class PhishingScanRequest(
+        val deviceId: String,
+        val sourceType: String,        // "notification"
+        val textContent: String,
+        val sender: String? = null,
+        val timestamp: String? = null,
+        val extractedUrls: List<String>? = null,
+        val subject: String? = null,
+        // 이 요청을 서버에서 카운트/로그에 포함할지 여부
+        val shouldLog: Boolean = false
+    )
+
+    data class PhishingScanResult(
+        val isPhishing: Boolean?,
+        val confidence: Double?,
+        val phishingType: String?,
+        val riskLevel: String?,
+        val riskIndicators: List<String>?,
+        val suspiciousUrls: List<String>?,
+        val shouldBlock: Boolean?
+    )
+
+    interface PhishingApi {
+        @POST("/api/phishing/scan")
+        suspend fun scan(@Body request: PhishingScanRequest): Response<PhishingScanResult>
+    }
 
     companion object {
         const val CHANNEL_ID = "phantom_spam_alerts"
@@ -25,14 +64,72 @@ class MyNotificationListener : NotificationListenerService() {
         const val ACTION_COPY = "com.cookandroid.phantom.ACTION_COPY_TEXT"
         const val EXTRA_TEXT = "com.cookandroid.phantom.EXTRA_TEXT"
 
-        // 같은 텍스트 반복 알림 방지용 (최근 N건 해시 저장)
-        private val recentHashes = object : LinkedHashMap<Int, Long>(64, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, Long>?): Boolean {
+        // ===== 중복 방지 공통 로직 =====
+        private const val DEDUP_WINDOW_MS = 30_000L // 30초 내 동일 텍스트 알림 억제
+
+        // 최근 본문 해시 저장
+        private val recentText = object : LinkedHashMap<String, Long>(64, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
                 return size > 64
             }
         }
-        private val lock = Any()
-        private const val DEDUP_WINDOW_MS = 30_000L // 30초 내 동일 텍스트 알림 억제
+
+        private fun normalizeForKey(s: String): String =
+            s.lowercase()
+                .replace(Regex("\\s+"), " ")
+                .replace(Regex("https?://\\S+"), "<link>")
+                .trim()
+
+        private fun md5(s: String): String {
+            val md = MessageDigest.getInstance("MD5")
+            return md.digest(s.toByteArray()).joinToString("") { "%02x".format(it) }
+        }
+
+        fun shouldAlertText(raw: String): Boolean {
+            val key = md5(normalizeForKey(raw))
+            val now = System.currentTimeMillis()
+            synchronized(recentText) {
+                val last = recentText[key]
+                if (last != null && now - last < DEDUP_WINDOW_MS) {
+                    return false
+                }
+                recentText[key] = now
+                return true
+            }
+        }
+    }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private fun getToken(): String? =
+        getSharedPreferences("phantom_prefs", MODE_PRIVATE)
+            .getString("jwt_token", null)
+
+    private fun buildRetrofit(): Retrofit {
+        val authInterceptor = Interceptor { chain ->
+            val req = chain.request()
+            val t = getToken()
+            val newReq = if (!t.isNullOrBlank()) {
+                req.newBuilder()
+                    .addHeader("Authorization", "Bearer $t")
+                    .build()
+            } else req
+            chain.proceed(newReq)
+        }
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .build()
+
+        return Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8080/") // 실제 폰이면 PC IP로 변경
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    private val phishingApi: PhishingApi by lazy {
+        buildRetrofit().create(PhishingApi::class.java)
     }
 
     override fun onCreate() {
@@ -51,7 +148,8 @@ class MyNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        // 로그인 & 사용자 스위치 체크
+        // 팬텀 앱 알림은 무시
+        if (sbn.packageName == packageName) return
         if (!isLoggedIn()) return
         if (!isAlertsEnabled()) return
 
@@ -61,11 +159,11 @@ class MyNotificationListener : NotificationListenerService() {
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString() ?: ""
 
-        // 점수 계산용 전체 텍스트
-        val fullText = listOf(title, text, bigText).filter { it.isNotBlank() }.joinToString("\n")
+        val fullText = listOf(title, text, bigText)
+            .filter { it.isNotBlank() }
+            .joinToString("\n")
         if (fullText.isBlank()) return
 
-        // 🔹 실제 “본문”으로 볼 내용만 선택 (표시/복사용)
         val bodyOnly = when {
             bigText.isNotBlank() -> bigText
             text.isNotBlank()    -> text
@@ -76,99 +174,153 @@ class MyNotificationListener : NotificationListenerService() {
 
         val pkg = sbn.packageName
 
-        CoroutineScope(Dispatchers.Default).launch {
-            // 중복 억제: 같은 텍스트가 연속적으로 오면 30초 창에서 무시
-            val hash = fullText.hashCode()
-            val now = System.currentTimeMillis()
-            synchronized(lock) {
-                val last = recentHashes[hash]
-                if (last != null && now - last < DEDUP_WINDOW_MS) return@launch
-                recentHashes[hash] = now
+        scope.launch {
+            if (!shouldAlertText(bodyOnly)) return@launch
+
+            val urls = extractUrls(fullText)
+            val request = PhishingScanRequest(
+                deviceId      = getPhantomDeviceId(),
+                sourceType    = "notification",
+                textContent   = fullText,
+                timestamp     = getCurrentTimestamp(),
+                extractedUrls = urls,
+                subject       = title.ifBlank { null },
+                shouldLog     = false      // 🔥 알림 스캔은 카운트 안 함
+            )
+
+            val response: Response<PhishingScanResult> = try {
+                phishingApi.scan(request)
+            } catch (_: Exception) {
+                return@launch
             }
 
-            val score = scoreText(fullText)
-            if (score >= 0.5) {
-                val reason = explainScore(fullText)
-                // 🔸 알림/복사/검사로 넘길 땐 본문만 사용
-                showAlertNotification(bodyOnly, pkg, score, reason)
-            }
+            if (!response.isSuccessful) return@launch
+            val result = response.body() ?: return@launch
+
+            val isPhishing = result.isPhishing ?: false
+            val confidence = result.confidence ?: 0.0
+            if (!isPhishing || confidence < 0.5) return@launch
+
+            showAlertNotification(bodyOnly, pkg, result)
         }
     }
 
-    /** 간단 휴리스틱 스코어: 0.0 ~ 1.0 */
-    private fun scoreText(text: String): Double {
-        var score = 0.0
+    private fun buildReasonFromAi(result: PhishingScanResult): String {
+        val parts = mutableListOf<String>()
 
-        // 1) URL 포함 여부 (0.4)
-        if (containsUrl(text)) score += 0.4
+        result.phishingType?.let {
+            parts.add("유형: ${translatePhishingType(it)}")
+        }
 
-        // 2) 긴급성 키워드 (0.2)
-        val urgencyKeywords = listOf("긴급", "지금", "즉시", "당장", "중요", "지체", "오류", "정지", "정책 위반")
-        if (urgencyKeywords.any { text.contains(it, ignoreCase = true) }) score += 0.2
+        result.riskLevel?.let {
+            parts.add("위험도: $it")
+        }
 
-        // 3) 금융/인증 키워드 (0.2)
-        val financial = listOf("계좌", "비밀번호", "비번", "OTP", "카드", "체크", "송금", "환불", "입금")
-        if (financial.any { text.contains(it, ignoreCase = true) }) score += 0.2
+        val indicators = result.riskIndicators ?: emptyList()
+        if (indicators.isNotEmpty()) {
+            indicators.take(3).forEach { ind ->
+                parts.add(translateIndicator(ind))
+            }
+        }
 
-        // 4) 단축 URL (0.15)
-        val shortLinkPattern = Pattern.compile("""\b(?:bit\.ly|t\.co|tinyurl|goo\.gl|ow\.ly)\b""", Pattern.CASE_INSENSITIVE)
-        if (shortLinkPattern.matcher(text).find()) score += 0.15
-
-        // 5) 기타 의심 키워드 (0.1)
-        val suspicious = listOf("보안", "인증", "로그인", "클릭", "수신거부", "당첨", "확인")
-        if (suspicious.any { text.contains(it, ignoreCase = true) }) score += 0.1
-
-        return score.coerceAtMost(1.0)
+        if (parts.isEmpty()) {
+            return "AI가 피싱 가능성을 감지했습니다."
+        }
+        return parts.joinToString(" · ")
     }
 
-    private fun explainScore(text: String): String {
-        val reasons = mutableListOf<String>()
-        if (containsUrl(text)) reasons.add("링크 포함")
-        if (Pattern.compile("긴급|지금|즉시|당장|중요", Pattern.CASE_INSENSITIVE).matcher(text).find())
-            reasons.add("긴급성 표현")
-        if (Pattern.compile("계좌|비밀번호|OTP|송금|카드", Pattern.CASE_INSENSITIVE).matcher(text).find())
-            reasons.add("금융/인증 언급")
-        if (Pattern.compile("(bit\\.ly|t\\.co|tinyurl|goo\\.gl|ow\\.ly)", Pattern.CASE_INSENSITIVE).matcher(text).find())
-            reasons.add("단축 URL")
-        return if (reasons.isEmpty()) "의심 패턴 발견" else reasons.joinToString(", ")
+    private fun translatePhishingType(type: String): String = when (type) {
+        "financial"     -> "금융 사기"
+        "personal_info" -> "개인정보 탈취"
+        "malware"       -> "악성코드 유포"
+        "scam"          -> "사기/스캠"
+        else            -> "알 수 없음"
     }
 
-    private fun containsUrl(text: String): Boolean {
-        val urlRegex =
+    private fun translateIndicator(indicator: String): String {
+        val lower = indicator.lowercase()
+        return when {
+            lower.contains("suspicious_keyword") -> {
+                val keyword = indicator.substringAfter(":").trim()
+                "의심 키워드 포함: $keyword"
+            }
+            lower.contains("contains_urls")   -> "URL 링크 포함"
+            lower.contains("multiple_urls")   -> "다수의 URL 포함"
+            lower.contains("urgency")         -> "긴급성 유도 표현"
+            lower.contains("financial")       -> "금융 관련 단어"
+            lower.contains("personal")        -> "개인정보 요구"
+            lower.contains("click")           -> "클릭 유도"
+            else                              -> indicator
+        }
+    }
+
+    private fun extractUrls(text: String): List<String> {
+        val urlPattern =
             "(?i)\\b(?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\([^\\s()<>]+\\))+"
-        return Regex(urlRegex).containsMatchIn(text)
+        return Regex(urlPattern).findAll(text).map { it.value }.toList()
     }
 
-    private fun showAlertNotification(bodyOnly: String, pkg: String, score: Double, reason: String) {
+    private fun getPhantomDeviceId(): String {
+        return Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ANDROID_ID
+        ) ?: "unknown_device"
+    }
+
+    private fun getCurrentTimestamp(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        return sdf.format(Date())
+    }
+
+    private fun showAlertNotification(
+        bodyOnly: String,
+        pkg: String,
+        result: PhishingScanResult
+    ) {
         val nm = ContextCompat.getSystemService(this, NotificationManager::class.java) ?: return
 
-        // ▶ SpamCheckActivity로 이동 (본문만 전달)
+        val confidence = result.confidence ?: 0.0
+        val reason = buildReasonFromAi(result)
+        val preview = if (bodyOnly.length > 140) bodyOnly.take(140) + "…" else bodyOnly
+        val title = "의심: 스팸/피싱 가능성 ${"%.0f%%".format(confidence * 100)}"
+        val content = "앱: $pkg • $reason\n$preview"
+
         val inspectIntent = Intent(applicationContext, SpamCheckActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            // ⚠️ CLEAR_TASK 제거 → 메인으로 자연스럽게 돌아가게
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
             putExtra(EXTRA_TEXT, bodyOnly)
+
+            putExtra("EXTRA_AI_FROM_NOTIFICATION", true)
+            putExtra("EXTRA_AI_IS_PHISHING", result.isPhishing ?: false)
+            putExtra("EXTRA_AI_CONFIDENCE", confidence)
+            putExtra("EXTRA_AI_TYPE", result.phishingType)
+            putExtra("EXTRA_AI_RISK", result.riskLevel)
+            putStringArrayListExtra(
+                "EXTRA_AI_INDICATORS",
+                ArrayList(result.riskIndicators ?: emptyList())
+            )
+            putStringArrayListExtra(
+                "EXTRA_AI_URLS",
+                ArrayList(result.suspiciousUrls ?: emptyList())
+            )
         }
         val inspectPI = PendingIntent.getActivity(
             applicationContext,
-            System.identityHashCode(bodyOnly),
+            0,
             inspectIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // ▶ 텍스트 복사 액션 (본문만 전달)
         val copyIntent = Intent(applicationContext, CopyActionReceiver::class.java).apply {
             action = ACTION_COPY
             putExtra(EXTRA_TEXT, bodyOnly)
         }
         val copyPI = PendingIntent.getBroadcast(
             applicationContext,
-            System.identityHashCode(bodyOnly) xor 0xCAFEBABE.toInt(),
+            1,
             copyIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
-        val preview = if (bodyOnly.length > 140) bodyOnly.take(140) + "…" else bodyOnly
-        val title = "의심: 스팸/피싱 가능성 ${"%.0f%%".format(score * 100)}"
-        val content = "앱: $pkg • 이유: $reason\n$preview"
 
         val notif = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_warning)
@@ -177,12 +329,12 @@ class MyNotificationListener : NotificationListenerService() {
             .setStyle(NotificationCompat.BigTextStyle().bigText(content))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(inspectPI)
-            .addAction(android.R.drawable.ic_menu_view,  "자세히 검사", inspectPI) // 그대로 OK
-            .addAction(android.R.drawable.ic_menu_share, "텍스트 복사", copyPI)    // ← ic_menu_copy 대신 이걸로
+            .addAction(android.R.drawable.ic_menu_view,  "자세히 검사", inspectPI)
+            .addAction(android.R.drawable.ic_menu_share, "텍스트 복사", copyPI)
             .setAutoCancel(true)
             .build()
 
-        nm.notify(NOTIF_ID_BASE + (System.currentTimeMillis() % 10_000).toInt(), notif)
+        nm.notify(NOTIF_ID_BASE, notif)
     }
 
     private fun createChannelIfNeeded() {
@@ -193,7 +345,7 @@ class MyNotificationListener : NotificationListenerService() {
                 "스팸 탐지 알림",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "알림 텍스트에서 의심스러운 내용이 발견되면 경고 알림을 표시합니다."
+                description = "알림 텍스트에서 의심스러운 내용이 발견되면 AI로 분석한 결과를 표시합니다."
             }
             nm.createNotificationChannel(ch)
         }
