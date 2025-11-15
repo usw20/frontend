@@ -195,8 +195,7 @@ class MypageActivity : AppCompatActivity() {
 
         // 보안 관리
         rowPrivacy.setOnClickListener {
-            Toast.makeText(this, "개인정보 권한 설정", Toast.LENGTH_SHORT).show()
-            // TODO: 권한 설정 화면으로 이동
+            openAppSettings()
         }
 
         rowNoti.setOnClickListener {
@@ -345,6 +344,17 @@ class MypageActivity : AppCompatActivity() {
     }
 
     // =================== 유틸리티 ===================
+    private fun openAppSettings() {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = android.net.Uri.fromParts("package", packageName, null)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "설정 화면을 열 수 없습니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setActionsEnabled(enabled: Boolean) {
         btnLogout.isEnabled = enabled
         btnDeleteAccount.isEnabled = enabled

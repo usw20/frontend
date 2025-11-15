@@ -16,11 +16,13 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.cookandroid.phantom.notification.MyNotificationListener
 import kotlinx.coroutines.*
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -83,7 +85,8 @@ class SpamCheckActivity : AppCompatActivity() {
         val sender: String? = null,
         val timestamp: String? = null,
         val extractedUrls: List<String>? = null,
-        val subject: String? = null
+        val subject: String? = null,
+        val shouldLog: Boolean = true      // ⭐ 수동 스캔은 기본 true (카운트)
     )
 
     data class PhishingScanResult(
@@ -115,6 +118,9 @@ class SpamCheckActivity : AppCompatActivity() {
 
     // ===== Coroutine =====
     private val uiScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    // ===== 검사한 텍스트 추적 =====
+    private val scannedTexts = mutableSetOf<String>()
 
     // ===== Retrofit =====
     private fun getToken(): String? =
@@ -163,8 +169,30 @@ class SpamCheckActivity : AppCompatActivity() {
         tvReasons     = findViewById(R.id.tvReasons)
         tvSwitchState = findViewById(R.id.tvSwitchState)
 
-        // 뒤로가기
-        btnBack.setOnClickListener { finish() }
+        // 🔙 새로운 백 제스처 처리 (OnBackPressedDispatcher)
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    val fromNotification =
+                        intent.getBooleanExtra("EXTRA_AI_FROM_NOTIFICATION", false)
+
+                    if (fromNotification) {
+                        // 알림에서 온 경우 → 메인 페이지로 이동
+                        startActivity(Intent(this@SpamCheckActivity, MainPageActivity::class.java))
+                        finish()
+                    } else {
+                        // 그냥 finish() 해서 이전 액티비티로
+                        finish()
+                    }
+                }
+            }
+        )
+
+        // 뒤로가기 버튼 → dispatcher 사용
+        btnBack.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
 
         // 초기 결과 텍스트
         resetResult()
@@ -204,7 +232,6 @@ class SpamCheckActivity : AppCompatActivity() {
 
         // 알림 인텐트 텍스트 처리
         handleIncomingTextFromIntent(intent)
-        // 한 번 처리 후 현재 인텐트 payload 제거(재사용 시 중복 방지)
         intent?.removeExtra(EXTRA_TEXT)
     }
 
@@ -220,7 +247,6 @@ class SpamCheckActivity : AppCompatActivity() {
     }
 
     // ===== Switch 표시 =====
-    /** 스위치 시각 상태 표시 (라벨/접근성) */
     private fun renderSwitch(on: Boolean) {
         tvSwitchState.text = if (on) "  (켜짐)" else "  (꺼짐)"
         tvSwitchState.setTextColor(
@@ -301,7 +327,7 @@ class SpamCheckActivity : AppCompatActivity() {
     private fun isNotificationListenerEnabled(): Boolean {
         val cn = ComponentName(
             this,
-            com.cookandroid.phantom.notification.MyNotificationListener::class.java
+            MyNotificationListener::class.java
         )
         val flat = Settings.Secure.getString(
             contentResolver,
@@ -325,7 +351,13 @@ class SpamCheckActivity : AppCompatActivity() {
             return
         }
 
-        // 로딩
+        // ⭐ 중복 검사 확인
+        val textHash = md5(normalizeForKey(message))
+        if (scannedTexts.contains(textHash)) {
+            Toast.makeText(this, "이미 검사한 메시지입니다", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         tvResult.text = "분석 중..."
         tvResult.setTextColor(Color.parseColor("#666666"))
         tvScore.text = ""
@@ -334,19 +366,17 @@ class SpamCheckActivity : AppCompatActivity() {
 
         uiScope.launch {
             try {
-                // URL 추출
                 val urls = extractUrls(message)
 
-                // 요청 생성
                 val request = PhishingScanRequest(
-                    deviceId = getPhantomDeviceId(),
-                    sourceType = "manual",
-                    textContent = message,
-                    timestamp = getCurrentTimestamp(),
-                    extractedUrls = urls
+                    deviceId      = getPhantomDeviceId(),
+                    sourceType    = "manual",        // 수동 스캔
+                    textContent   = message,
+                    timestamp     = getCurrentTimestamp(),
+                    extractedUrls = urls,
+                    shouldLog     = true             // ⭐ 여기서만 카운트
                 )
 
-                // API 호출
                 val response = withContext(Dispatchers.IO) {
                     phishingApi.scan(request)
                 }
@@ -354,6 +384,8 @@ class SpamCheckActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val result = response.body()
                     displayResult(result)
+                    // ⭐ 검사 완료 후 해시 저장
+                    scannedTexts.add(textHash)
                 } else {
                     showError("서버 오류: ${response.code()}")
                 }
@@ -377,7 +409,6 @@ class SpamCheckActivity : AppCompatActivity() {
         val riskLevel = result.riskLevel ?: "UNKNOWN"
         val phishingType = result.phishingType ?: "unknown"
 
-        // 결과 라벨
         when {
             isPhishing && confidence > 0.7 -> {
                 tvResult.text = "⚠️ 위험: 피싱/스팸으로 판단됩니다"
@@ -389,14 +420,12 @@ class SpamCheckActivity : AppCompatActivity() {
             }
             else -> {
                 tvResult.text = "✓ 안전: 정상 메시지로 판단됩니다"
-                tvResult.setTextColor(Color.parseColor("#12AF5D"))
+                tvResult.setTextColor(Color.parseColor("#12AFD5D"))
             }
         }
 
-        // 신뢰도/위험도
         tvScore.text = "신뢰도: ${String.format("%.1f%%", confidence * 100)} | 위험도: $riskLevel"
 
-        // 상세 사유
         val indicators = result.riskIndicators ?: emptyList()
         val urls = result.suspiciousUrls ?: emptyList()
 
@@ -439,9 +468,7 @@ class SpamCheckActivity : AppCompatActivity() {
         val text = raw.trim()
         if (text.isEmpty()) return
 
-        // ✅ 디바운스: 동일 텍스트가 짧은 시간에 여러 번 들어오면 무시
         if (!shouldAcceptText(text)) {
-            // 이미 최근에 처리한 동일(정규화 기준) 텍스트 → 무시
             return
         }
 
@@ -476,11 +503,11 @@ class SpamCheckActivity : AppCompatActivity() {
     }
 
     private fun translatePhishingType(type: String): String = when (type) {
-        "financial" -> "금융 사기"
+        "financial"     -> "금융 사기"
         "personal_info" -> "개인정보 탈취"
-        "malware" -> "악성코드 유포"
-        "scam" -> "사기/스캠"
-        else -> "알 수 없음"
+        "malware"       -> "악성코드 유포"
+        "scam"          -> "사기/스캠"
+        else            -> "알 수 없음"
     }
 
     private fun translateIndicator(indicator: String): String {
@@ -492,11 +519,11 @@ class SpamCheckActivity : AppCompatActivity() {
             }
             lower.contains("contains_urls") -> "URL 링크 포함"
             lower.contains("multiple_urls") -> "다수의 URL 포함"
-            lower.contains("urgency") -> "긴급성 유도 표현"
-            lower.contains("financial") -> "금융 관련 단어"
-            lower.contains("personal") -> "개인정보 요구"
-            lower.contains("click") -> "클릭 유도"
-            else -> indicator
+            lower.contains("urgency")      -> "긴급성 유도 표현"
+            lower.contains("financial")    -> "금융 관련 단어"
+            lower.contains("personal")     -> "개인정보 요구"
+            lower.contains("click")        -> "클릭 유도"
+            else                           -> indicator
         }
     }
 
