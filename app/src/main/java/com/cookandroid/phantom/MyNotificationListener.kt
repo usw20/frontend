@@ -122,7 +122,7 @@ class MyNotificationListener : NotificationListenerService() {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/") // 실제 폰이면 PC IP로 변경
+            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/") // 실제 폰이면 PC IP로 변경
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

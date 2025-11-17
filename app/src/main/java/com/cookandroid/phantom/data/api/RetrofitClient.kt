@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
     private const val TAG = "RetrofitClient"
     // ⚠️ 서버 IP와 포트로 변경 필요 (현재: Spring Boot 8080 포트)
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private const val BASE_URL = "https://unparticularised-carneous-michaela.ngrok-free.dev/"
     private const val MAX_LOG_BODY_SIZE = 100_000 // 100KB만 로깅
 
     private var tokenDataStore: TokenDataStore? = null

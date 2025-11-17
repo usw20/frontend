@@ -446,7 +446,7 @@ private fun buildRetrofitWithAuth_M(ctx: Context): Retrofit {
         .build()
 
     return Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/")
+        .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

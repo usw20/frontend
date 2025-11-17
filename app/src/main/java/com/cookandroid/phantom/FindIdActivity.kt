@@ -18,7 +18,7 @@ class FindIdActivity : AppCompatActivity() {
     // 🔧 여기만 바꾸면 됨: by lazy로 즉시 초기화 (lateinit 제거)
     private val api: AuthApi by lazy {
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/") // 에뮬레이터에서 PC 로컬 서버면 10.0.2.2
+            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/") // 에뮬레이터에서 PC 로컬 서버면 10.0.2.2
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AuthApi::class.java)

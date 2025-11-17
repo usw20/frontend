@@ -100,7 +100,7 @@ private fun buildRetrofit(ctx: Context): Retrofit {
     }
     val client = OkHttpClient.Builder().addInterceptor(authInterceptor).build()
     return Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/")
+        .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

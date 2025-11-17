@@ -99,7 +99,7 @@ class LoginActivity : AppCompatActivity() {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/") // 서버 주소 - 에뮬레이터용
+            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/") // 서버 주소 - 에뮬레이터용
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

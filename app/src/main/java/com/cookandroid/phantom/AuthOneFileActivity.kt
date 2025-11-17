@@ -197,7 +197,7 @@ private fun buildRetrofit(ctx: Context): Retrofit {
         .build()
 
     return Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080/") // 에뮬레이터→로컬 서버 (배포 시 도메인으로 교체)
+        .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/") // 에뮬레이터→로컬 서버 (배포 시 도메인으로 교체)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

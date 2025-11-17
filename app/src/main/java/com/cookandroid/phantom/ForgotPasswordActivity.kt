@@ -19,7 +19,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
     // ✅ Retrofit 즉시 준비(에뮬레이터→로컬 서버: 10.0.2.2)
     private val api: AuthApi by lazy {
         Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")   // 서버가 /api/auth/forgot-password 라우트라면 그대로 OK
+            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")   // 서버가 /api/auth/forgot-password 라우트라면 그대로 OK
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AuthApi::class.java)

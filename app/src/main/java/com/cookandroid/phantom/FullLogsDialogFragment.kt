@@ -47,7 +47,7 @@ class FullLogsDialogFragment : DialogFragment() {
             chain.proceed(req)
         }
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")
+            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")
             .client(OkHttpClient.Builder().addInterceptor(auth).build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()

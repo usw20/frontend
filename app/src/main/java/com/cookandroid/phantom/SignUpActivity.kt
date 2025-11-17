@@ -143,7 +143,7 @@ class SignUpActivity : AppCompatActivity() {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/") // 에뮬레이터용 로컬 서버
+            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/") // 에뮬레이터용 로컬 서버
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
