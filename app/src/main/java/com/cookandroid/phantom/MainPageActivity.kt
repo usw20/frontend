@@ -417,18 +417,21 @@ class MainPageActivity : AppCompatActivity() {
             alpha = 0f
         }
 
+        // 🔹 gravity를 TOP | END 로 바꿔서 오른쪽 위로 붙이기
         val lp = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT,
-            Gravity.TOP or Gravity.CENTER_HORIZONTAL
+            Gravity.TOP or Gravity.END
         ).apply {
-            topMargin = dp(6)
+            topMargin = dp(0)      // 위쪽 살짝만 띄우기 (원하면 값 조절)
+            marginEnd = dp(4)      // 오른쪽에서 살짝 안쪽으로 (원하면 값 조절)
         }
         container.addView(miniBubble, lp)
 
-        // 살짝 오른쪽 치우치게
-        miniBubble?.translationX = dp(8).toFloat()
+        // 🔹 더 이상 X축으로 밀 필요 없음
+        miniBubble?.translationX = 0f
     }
+
 
     private fun showMiniBubbleInBotIcon(text: String, autoDismissMs: Long = MINI_AUTO_DISMISS_MS) {
         val tv = miniBubble ?: return
