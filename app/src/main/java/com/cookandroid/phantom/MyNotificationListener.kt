@@ -67,6 +67,32 @@ class MyNotificationListener : NotificationListenerService() {
         // ===== 중복 방지 공통 로직 =====
         private const val DEDUP_WINDOW_MS = 30_000L // 30초 내 동일 텍스트 알림 억제
 
+        // 🔹 시스템/충전/알람 알림 제외용 상수들
+        // (제조사별로 조금 다를 수 있지만 대표적인 패키지들)
+        private val SYSTEM_PACKAGES = setOf(
+            "com.android.systemui",              // 상태바, 충전, 시스템 팝업
+            "com.samsung.android.sm",           // 삼성 디바이스 케어
+            "com.samsung.android.lool",         // 옛 디바이스 케어
+            "com.sec.android.app.clockpackage", // 삼성 기본 시계/알람
+            "com.google.android.deskclock"      // 구글 시계/알람
+        )
+
+        // 너무 짧은 알림(초 카운트 같은 것들)은 그냥 패스
+        private const val MIN_BODY_LENGTH = 10
+
+        // 충전/배터리/알람 관련 문구는 스팸 탐지 제외
+        private val EXCLUDE_KEYWORDS = listOf(
+            "충전",
+            "고속 충전",
+            "충전 중",
+            "충전 완료",
+            "배터리",
+            "배터리 최적화",
+            "알람",
+            "타이머",
+            "카운트다운"
+        )
+
         // 최근 본문 해시 저장
         private val recentText = object : LinkedHashMap<String, Long>(64, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
@@ -148,10 +174,15 @@ class MyNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        // 팬텀 앱 알림은 무시
+        // 0) 팬텀 앱 알림은 무시
         if (sbn.packageName == packageName) return
         if (!isLoggedIn()) return
         if (!isAlertsEnabled()) return
+
+        val pkg = sbn.packageName
+
+        // 1) 시스템/충전/알람 관련 패키지는 통째로 스캔 제외
+        if (SYSTEM_PACKAGES.contains(pkg)) return
 
         val notif = sbn.notification ?: return
         val extras = notif.extras
@@ -172,9 +203,16 @@ class MyNotificationListener : NotificationListenerService() {
         }
         if (bodyOnly.isBlank()) return
 
-        val pkg = sbn.packageName
+        // 2) 너무 짧은 알림(초/간단 상태 변화 등)은 스캔 안 함
+        if (bodyOnly.length < MIN_BODY_LENGTH) return
+
+        // 3) 충전/배터리/알람 관련 키워드가 포함된 알림은 스캔 안 함
+        if (EXCLUDE_KEYWORDS.any { bodyOnly.contains(it, ignoreCase = true) }) {
+            return
+        }
 
         scope.launch {
+            // 4) 동일 알림이 너무 자주 오면(중복) 알림 억제
             if (!shouldAlertText(bodyOnly)) return@launch
 
             val urls = extractUrls(fullText)
