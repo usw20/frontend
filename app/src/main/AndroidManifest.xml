@@ -54,9 +54,9 @@
         <activity android:name=".MainPageActivity" android:exported="false" />
         <activity android:name=".SecurityActivity" android:exported="false" />
         <activity android:name=".MypageActivity" android:exported="false" />
-        <activity android:name=".AppScanActivity" android:exported="false"/>
-        <activity android:name=".ScanResultActivity" android:exported="false"/>
-        <activity android:name=".AppDetailActivity" android:exported="false"/>
+        <activity android:name=".AppScanActivity" android:exported="false" />
+        <activity android:name=".ScanResultActivity" android:exported="false" />
+        <activity android:name=".AppDetailActivity" android:exported="false" />
         <activity
             android:name=".SpamCheckActivity"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar"
@@ -113,6 +113,7 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
+
         <!-- ✅ 앱 설치 감시 포그라운드 서비스 (ScanMonitorService) -->
         <service
             android:name=".ScanMonitorService"
