@@ -148,7 +148,7 @@ class MyNotificationListener : NotificationListenerService() {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/") // 실제 폰이면 PC IP로 변경
+            .baseUrl("https://etha-unbeloved-supersensually.ngrok-free.dev/") // 실제 폰이면 PC IP로 변경
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
