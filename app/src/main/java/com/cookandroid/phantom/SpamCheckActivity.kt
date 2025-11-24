@@ -140,7 +140,7 @@ class SpamCheckActivity : AppCompatActivity() {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")
+            .baseUrl("https://etha-unbeloved-supersensually.ngrok-free.dev/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -420,7 +420,7 @@ class SpamCheckActivity : AppCompatActivity() {
             }
             else -> {
                 tvResult.text = "✓ 안전: 정상 메시지로 판단됩니다"
-                tvResult.setTextColor(Color.parseColor("#12AFD5D"))
+                tvResult.setTextColor(Color.parseColor("#12AF5D"))  // ✅ 6자리로 수정
             }
         }
 
