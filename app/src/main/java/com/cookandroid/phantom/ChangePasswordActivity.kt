@@ -56,7 +56,7 @@ class ChangePasswordActivity : AppCompatActivity() {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")  // 에뮬레이터 → 로컬서버. 배포 시 교체
+            .baseUrl("https://etha-unbeloved-supersensually.ngrok-free.dev/")  // 에뮬레이터 → 로컬서버. 배포 시 교체
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

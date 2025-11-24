@@ -224,7 +224,7 @@ private fun buildChatbotRetrofit(ctx: android.content.Context): ChatbotApi {
         .build()
 
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://unparticularised-carneous-michaela.ngrok-free.dev/")
+        .baseUrl("https://etha-unbeloved-supersensually.ngrok-free.dev/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
