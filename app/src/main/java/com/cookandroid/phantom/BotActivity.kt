@@ -221,6 +221,9 @@ private fun buildChatbotRetrofit(ctx: android.content.Context): ChatbotApi {
 
     val client = OkHttpClient.Builder()
         .addInterceptor(auth)
+        .connectTimeout(3, java.util.concurrent.TimeUnit.MINUTES) // 연결 타임아웃 설정
+        .readTimeout(3, java.util.concurrent.TimeUnit.MINUTES)    // 읽기 타임아웃 설정
+        .writeTimeout(3, java.util.concurrent.TimeUnit.MINUTES)   // 쓰기 타임아웃 설정
         .build()
 
     val retrofit = Retrofit.Builder()
